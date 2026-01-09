@@ -1,0 +1,345 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="4.0">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProductVersion>8.0.50727</ProductVersion>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>{C74F4A03-C9D8-4F57-9A22-A3F887D71BD2}</ProjectGuid>
+    <ProjectTypeGuids>{349c5851-65df-11da-9384-00065b846f21};{F184B08F-C81C-45F6-A57F-5ABD9991F28F}</ProjectTypeGuids>
+    <OutputType>Library</OutputType>
+    <RootNamespace>EPay</RootNamespace>
+    <AssemblyName>EPay</AssemblyName>
+    <SccProjectName>%24/Ashley.Finance/Main/Credit/Epay/SourceCode</SccProjectName>
+    <SccLocalPath>.</SccLocalPath>
+    <SccAuxPath>http://aarcwivpap10797:8080/tfs/ashley</SccAuxPath>
+    <SccProvider>{4CA58AB2-18FA-4F8D-95D4-32DDF27D184C}</SccProvider>
+    <FileUpgradeFlags>
+    </FileUpgradeFlags>
+    <UpgradeBackupLocation>
+    </UpgradeBackupLocation>
+    <OldToolsVersion>4.0</OldToolsVersion>
+    <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
+    <UseIISExpress>false</UseIISExpress>
+    <IISExpressSSLPort />
+    <IISExpressAnonymousAuthentication />
+    <IISExpressWindowsAuthentication />
+    <IISExpressUseClassicPipelineMode />
+    <TargetFrameworkProfile />
+    <Use64BitIISExpress />
+    <UseGlobalApplicationHostFile />
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <DefineDebug>true</DefineDebug>
+    <DefineTrace>true</DefineTrace>
+    <OutputPath>bin\</OutputPath>
+    <DocumentationFile>EPay.xml</DocumentationFile>
+    <NoWarn>42016,41999,42017,42018,42019,42032,42036,42020,42021,42022,42353,42354,42355</NoWarn>
+    <CodeAnalysisRuleSet>..\..\..\..\Policies\Code Analysis\Ashley Finance Team.ruleset</CodeAnalysisRuleSet>
+    <RunCodeAnalysis>true</RunCodeAnalysis>
+    <ExcludeGeneratedDebugSymbol>false</ExcludeGeneratedDebugSymbol>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <DefineDebug>false</DefineDebug>
+    <DefineTrace>true</DefineTrace>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\</OutputPath>
+    <DocumentationFile>EPay.xml</DocumentationFile>
+    <NoWarn>42016,41999,42017,42018,42019,42032,42036,42020,42021,42022,42353,42354,42355</NoWarn>
+    <CodeAnalysisRuleSet>..\Policies\Code Analysis\Ashley Finance Team.ruleset</CodeAnalysisRuleSet>
+    <ExcludeGeneratedDebugSymbol>false</ExcludeGeneratedDebugSymbol>
+    <RunCodeAnalysis>true</RunCodeAnalysis>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="AjaxControlToolkit">
+      <HintPath>\\ashleyfurniture.com\afi-dfs\Vaults\Ashley_Common_Assemblies\Ajax\3.5 Framework Control Toolkit\3.5.40412.2\AjaxControlToolkit.dll</HintPath>
+    </Reference>
+    <Reference Include="Ashley.Web.LocalUI">
+      <HintPath>\\ashleyfurniture.com\afi-dfs\Vaults\Ashley_Common_Assemblies\Ashley.Web.LocalUI\1.0.0.0\Ashley.Web.LocalUI.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="Ashley.Web.Responsive">
+      <HintPath>\\ashleyfurniture.com\afi-dfs\Vaults\Ashley_Common_Assemblies\Ashley.Web.Responsive\1.0.0.22927\Ashley.Web.Responsive.dll</HintPath>
+    </Reference>
+    <Reference Include="Ashley2.Common.Auditing">
+      <HintPath>\\ashleyfurniture.com\afi-dfs\Vaults\Ashley_Common_Assemblies\Ashley2.Common.Auditing\2.0.0.0\Ashley2.Common.Auditing.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="Ashley2.Data">
+      <HintPath>\\ashleyfurniture.com\afi-dfs\Vaults\Ashley_Common_Assemblies\Ashley2.Data\2.0.0.0\Ashley2.Data.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="Ashley2.Web.UI.BasePage">
+      <HintPath>\\ashleyfurniture.com\afi-dfs\Vaults\Ashley_Common_Assemblies\Ashley2.Web.UI.BasePage\2.0.0.0\Ashley2.Web.UI.BasePage.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="Ashley2.Web.UI.GridViewExportUtil, Version=2.0.5207.11398, Culture=neutral, PublicKeyToken=e1092ec46ea712cb, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>\\ashleyfurniture.com\afi-dfs\Vaults\Ashley_Common_Assemblies\Ashley2.Web.UI.GridViewExportUtil\2.0.5669.23981\Ashley2.Web.UI.GridViewExportUtil.dll</HintPath>
+    </Reference>
+    <Reference Include="GrapeCity.ActiveReports.Document.v7, Version=7.1.7671.0, Culture=neutral, PublicKeyToken=cc4967777c49a3ff, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>\\ashleyfurniture\afi-dfs\Vaults\Ashley_Common_Assemblies\ActiveReports.Document\7.1.7671.0\GrapeCity.ActiveReports.Document.v7.dll</HintPath>
+    </Reference>
+    <Reference Include="GrapeCity.ActiveReports.Export.Pdf.v7, Version=7.1.7671.0, Culture=neutral, PublicKeyToken=cc4967777c49a3ff, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>\\ashleyfurniture\afi-dfs\Vaults\Ashley_Common_Assemblies\ActiveReports.Export.PDF\7.1.7671.0\GrapeCity.ActiveReports.Export.Pdf.v7.dll</HintPath>
+    </Reference>
+    <Reference Include="GrapeCity.ActiveReports.Extensibility.v7, Version=7.1.7671.0, Culture=neutral, PublicKeyToken=cc4967777c49a3ff, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>\\ashleyfurniture\afi-dfs\Vaults\Ashley_Common_Assemblies\ActiveReports.Extensibility\7.1.7671.0\GrapeCity.ActiveReports.Extensibility.v7.dll</HintPath>
+    </Reference>
+    <Reference Include="GrapeCity.ActiveReports.v7, Version=7.1.7671.0, Culture=neutral, PublicKeyToken=cc4967777c49a3ff, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>\\ashleyfurniture\afi-dfs\Vaults\Ashley_Common_Assemblies\ActiveReports\7.1.7671.0\GrapeCity.ActiveReports.v7.dll</HintPath>
+    </Reference>
+    <Reference Include="GrapeCity.ActiveReports.Web.v7, Version=7.1.7671.0, Culture=neutral, PublicKeyToken=cc4967777c49a3ff, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>\\ashleyfurniture\afi-dfs\Vaults\Ashley_Common_Assemblies\ActiveReports.Web\7.1.7671.0\GrapeCity.ActiveReports.Web.v7.dll</HintPath>
+    </Reference>
+    <Reference Include="IBM.Data.DB2.iSeries, Version=10.0.0.0, Culture=neutral, PublicKeyToken=9cdb2ebfb1f93a26">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>\\ashleyfurniture.com\afi-dfs\Vaults\Ashley_Common_Assemblies\IBM.Data.DB2.iSeries\11.0.11.2\IBM.Data.DB2.iSeries.dll</HintPath>
+    </Reference>
+    <Reference Include="System" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="System.Drawing" />
+    <Reference Include="System.Web" />
+    <Reference Include="System.Web.Extensions" />
+    <Reference Include="System.Web.Extensions.Design" />
+    <Reference Include="System.Xml" />
+    <Reference Include="System.Configuration" />
+    <Reference Include="System.Web.Services" />
+    <Reference Include="System.EnterpriseServices" />
+    <Reference Include="System.Web.Mobile" />
+    <Reference Include="System.Xml.Linq" />
+  </ItemGroup>
+  <ItemGroup>
+    <Import Include="Microsoft.VisualBasic" />
+    <Import Include="System" />
+    <Import Include="System.Collections" />
+    <Import Include="System.Collections.Generic" />
+    <Import Include="System.Data" />
+    <Import Include="System.Diagnostics" />
+    <Import Include="System.Collections.Specialized" />
+    <Import Include="System.Configuration" />
+    <Import Include="System.Text" />
+    <Import Include="System.Text.RegularExpressions" />
+    <Import Include="System.Web" />
+    <Import Include="System.Web.Caching" />
+    <Import Include="System.Web.SessionState" />
+    <Import Include="System.Web.Security" />
+    <Import Include="System.Web.Profile" />
+    <Import Include="System.Web.UI" />
+    <Import Include="System.Web.UI.WebControls" />
+    <Import Include="System.Web.UI.WebControls.WebParts" />
+    <Import Include="System.Web.UI.HtmlControls" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="ActiveReports.ReportService.asmx" />
+    <Content Include="Images\asc.png" />
+    <Content Include="Images\ConfirmationHeader.jpg" />
+    <Content Include="Images\desc.png" />
+    <Content Include="main.aspx" />
+    <Content Include="Scripts\Common.js" />
+    <Content Include="Scripts\Main.js" />
+    <Content Include="Scripts\x.js" />
+    <Content Include="Scripts\xtableheaderfixed.js" />
+    <Content Include="TestRTPConf.aspx" />
+    <Content Include="UserControls\EpayNav.ascx" />
+    <Content Include="ViewPayment.aspx" />
+    <Content Include="Web.config">
+      <SubType>Designer</SubType>
+    </Content>
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="AnalystReport.aspx.designer.vb">
+      <DependentUpon>AnalystReport.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="AnalystReport.aspx.vb">
+      <DependentUpon>AnalystReport.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="Classes\Common.vb" />
+    <Compile Include="Classes\DataAccess.vb" />
+    <Compile Include="Classes\Db2DataAccess.vb" />
+    <Compile Include="Classes\DONOTUSE\BillToState.vb" />
+    <Compile Include="Classes\DONOTUSE\CheckBoxTemplate.vb" />
+    <Compile Include="Classes\DONOTUSE\CreditTerritory.vb" />
+    <Compile Include="Classes\DONOTUSE\Customer.vb" />
+    <Compile Include="Classes\DONOTUSE\InvoiceCollection.vb" />
+    <Compile Include="Classes\DONOTUSE\TermsCode.vb" />
+    <Compile Include="Classes\EpayBasePage.vb">
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="Classes\DONOTUSE\Invoice.vb" />
+    <Compile Include="Confirmation.aspx.designer.vb">
+      <DependentUpon>Confirmation.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="Confirmation.aspx.vb">
+      <DependentUpon>Confirmation.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="AdminMaintenance.aspx.designer.vb">
+      <DependentUpon>AdminMaintenance.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="AdminMaintenance.aspx.vb">
+      <DependentUpon>AdminMaintenance.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="UserControls\EpayNav.ascx.designer.vb">
+      <DependentUpon>EpayNav.ascx</DependentUpon>
+    </Compile>
+    <Compile Include="UserControls\EpayNav.ascx.vb">
+      <DependentUpon>EpayNav.ascx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="UserList.aspx.designer.vb">
+      <DependentUpon>UserList.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="UserList.aspx.vb">
+      <DependentUpon>UserList.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="History.aspx.designer.vb">
+      <DependentUpon>History.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="History.aspx.vb">
+      <DependentUpon>History.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="main.aspx.designer.vb">
+      <DependentUpon>main.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="main.aspx.vb">
+      <DependentUpon>main.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="My Project\AssemblyInfo.vb" />
+    <Compile Include="My Project\Application.Designer.vb">
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Application.myapp</DependentUpon>
+    </Compile>
+    <Compile Include="My Project\Resources.Designer.vb">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>Resources.resx</DependentUpon>
+    </Compile>
+    <Compile Include="My Project\Settings.Designer.vb">
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Settings.settings</DependentUpon>
+      <DesignTimeSharedInput>True</DesignTimeSharedInput>
+    </Compile>
+    <Compile Include="Reports\ReportEpayConfirmation.Designer.vb">
+      <DependentUpon>ReportEpayConfirmation.vb</DependentUpon>
+    </Compile>
+    <Compile Include="Reports\ReportEpayConfirmation.vb">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="RTPConf.ashx.vb">
+      <DependentUpon>RTPConf.ashx</DependentUpon>
+    </Compile>
+    <Compile Include="TestRTPConf.aspx.designer.vb">
+      <DependentUpon>TestRTPConf.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="TestRTPConf.aspx.vb">
+      <DependentUpon>TestRTPConf.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="UserListPrintablePage.aspx.designer.vb">
+      <DependentUpon>UserListPrintablePage.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="UserListPrintablePage.aspx.vb">
+      <DependentUpon>UserListPrintablePage.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="ViewPayment.aspx.designer.vb">
+      <DependentUpon>ViewPayment.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="ViewPayment.aspx.vb">
+      <DependentUpon>ViewPayment.aspx</DependentUpon>
+      <SubType>ASPXCodebehind</SubType>
+    </Compile>
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="My Project\licenses.licx" />
+    <EmbeddedResource Include="My Project\Resources.resx">
+      <Generator>VbMyResourcesResXFileCodeGenerator</Generator>
+      <LastGenOutput>Resources.Designer.vb</LastGenOutput>
+      <CustomToolNamespace>My.Resources</CustomToolNamespace>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Reports\ReportEpayConfirmation.resx">
+      <SubType>Designer</SubType>
+      <DependentUpon>ReportEpayConfirmation.vb</DependentUpon>
+    </EmbeddedResource>
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="Documents\USBankHelp.pdf" />
+    <EmbeddedResource Include="ashley.snk" />
+    <None Include="My Project\Application.myapp">
+      <Generator>MyApplicationCodeGenerator</Generator>
+      <LastGenOutput>Application.Designer.vb</LastGenOutput>
+    </None>
+    <None Include="My Project\PublishProfiles\Profile1.pubxml" />
+    <None Include="My Project\Settings.settings">
+      <Generator>SettingsSingleFileGenerator</Generator>
+      <CustomToolNamespace>My</CustomToolNamespace>
+      <LastGenOutput>Settings.Designer.vb</LastGenOutput>
+    </None>
+    <Content Include="AnalystReport.aspx" />
+    <Content Include="Confirmation.aspx" />
+    <Content Include="AdminMaintenance.aspx" />
+    <Content Include="UserList.aspx" />
+    <Content Include="History.aspx" />
+    <Content Include="RTPConf.ashx" />
+    <Content Include="UserListPrintablePage.aspx" />
+  </ItemGroup>
+  <ItemGroup>
+    <WCFMetadata Include="Connected Services\" />
+  </ItemGroup>
+  <PropertyGroup>
+    <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">10.0</VisualStudioVersion>
+    <VSToolsPath Condition="'$(VSToolsPath)' == ''">$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)</VSToolsPath>
+  </PropertyGroup>
+  <PropertyGroup>
+    <SignAssembly>true</SignAssembly>
+  </PropertyGroup>
+  <PropertyGroup>
+    <AssemblyOriginatorKeyFile>ashley.snk</AssemblyOriginatorKeyFile>
+  </PropertyGroup>
+  <Import Project="$(MSBuildBinPath)\Microsoft.VisualBasic.targets" />
+  <Import Project="$(VSToolsPath)\WebApplications\Microsoft.WebApplication.targets" Condition="'$(VSToolsPath)' != ''" />
+  <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v10.0\WebApplications\Microsoft.WebApplication.targets" Condition="false" />
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+  <ProjectExtensions>
+    <VisualStudio>
+      <FlavorProperties GUID="{349c5851-65df-11da-9384-00065b846f21}">
+        <WebProjectProperties>
+          <UseIIS>False</UseIIS>
+          <AutoAssignPort>True</AutoAssignPort>
+          <DevelopmentServerPort>2785</DevelopmentServerPort>
+          <DevelopmentServerVPath>/</DevelopmentServerVPath>
+          <IISUrl>
+          </IISUrl>
+          <NTLMAuthentication>False</NTLMAuthentication>
+          <UseCustomServer>False</UseCustomServer>
+          <CustomServerUrl>
+          </CustomServerUrl>
+          <SaveServerSettingsInUserFile>False</SaveServerSettingsInUserFile>
+        </WebProjectProperties>
+      </FlavorProperties>
+    </VisualStudio>
+  </ProjectExtensions>
+</Project>
