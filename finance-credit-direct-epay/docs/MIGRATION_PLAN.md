@@ -2095,14 +2095,1704 @@ All configuration will be externalized:
 
 ---
 
+---
+
+## Phase 10: Structured Logging & Observability (Integrated Across All Phases)
+
+### Current Logging Issues
+
+**Problems Identified in Existing Codebase:**
+
+1. **Minimal Logging** - Only basic `System.Web.HttpContext.Current.Trace.Warn()` statements
+2. **No Structured Logging** - Plain text messages, hard to query
+3. **Inconsistent Error Handling** - Many `Catch ex As Exception; Throw` blocks with no logging
+4. **Limited Audit Trail** - Only `WriteErrorToAuditLog()` for errors, no business event tracking
+5. **No Performance Metrics** - Commented-out Stopwatch code indicates performance concerns
+6. **No Correlation IDs** - Cannot trace requests across layers
+7. **No Log Levels** - Everything is either traced or not logged
+8. **Database-Only Audit Log** - `usp_InsertAuditRecord` creates database bottleneck
+
+**Current Logging Examples Found:**
+
+```vb
+' Minimal trace logging
+System.Web.HttpContext.Current.Trace.Warn("Totals sbSQL:" & sbSQL.ToString)
+
+' Basic error logging to database
+WriteErrorToAuditLog(0, "Could not get EPay Reference Number")
+
+' Commented-out performance tracking
+'Dim timer As Stopwatch = Stopwatch.StartNew
+'timer.Stop()
+'Common.WriteErrorToAuditLog(0, "- START - " & timer.ElapsedMilliseconds.ToString)
+
+' Exception handling with no context
+Catch ex As Exception
+    Throw
+```
+
+### Objectives
+
+✅ **Structured Logging** - JSON-formatted logs with rich context
+✅ **Correlation Tracking** - Trace requests across all layers
+✅ **Performance Monitoring** - Automatic timing and metrics
+✅ **Security Auditing** - Track all security-relevant events
+✅ **Business Event Tracking** - Log payment lifecycle events
+✅ **Centralized Log Management** - Aggregate logs from all sources
+✅ **Real-time Alerting** - Proactive issue detection
+✅ **Compliance** - Meet audit and regulatory requirements
+
+---
+
+### Structured Logging Architecture
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                    Application Layers                            │
+│  ┌──────────────┬──────────────┬──────────────┬──────────────┐  │
+│  │ Controllers  │  Services    │ Repositories │  Middleware  │  │
+│  └──────┬───────┴──────┬───────┴──────┬───────┴──────┬───────┘  │
+│         │              │              │              │           │
+│         └──────────────┴──────────────┴──────────────┘           │
+│                         │                                         │
+│                    Serilog Core                                   │
+│                         │                                         │
+│         ┌───────────────┼───────────────┬──────────────┐         │
+│         │               │               │              │         │
+│    ┌────▼────┐    ┌────▼────┐    ┌────▼────┐   ┌────▼────┐    │
+│    │ Console │    │  File   │    │App Ins. │   │  Seq    │    │
+│    │  Sink   │    │  Sink   │    │  Sink   │   │  Sink   │    │
+│    └─────────┘    └─────────┘    └─────────┘   └─────────┘    │
+└─────────────────────────────────────────────────────────────────┘
+                              │
+                    ┌─────────┴─────────┐
+                    │                   │
+            ┌───────▼────────┐  ┌──────▼──────┐
+            │ Azure Monitor  │  │  Seq/ELK    │
+            │ (Production)   │  │  (Dev/QA)   │
+            └────────────────┘  └─────────────┘
+```
+
+---
+
+### Implementation Strategy
+
+#### **1. Backend Structured Logging (.NET Core)**
+
+**1.1 Install Serilog Packages**
+
+```xml
+<!-- EPay.API -->
+<PackageReference Include="Serilog.AspNetCore" Version="8.0.*" />
+<PackageReference Include="Serilog.Sinks.Console" Version="5.0.*" />
+<PackageReference Include="Serilog.Sinks.File" Version="5.0.*" />
+<PackageReference Include="Serilog.Sinks.ApplicationInsights" Version="4.0.*" />
+<PackageReference Include="Serilog.Sinks.Seq" Version="7.0.*" />
+<PackageReference Include="Serilog.Enrichers.Environment" Version="2.3.*" />
+<PackageReference Include="Serilog.Enrichers.Thread" Version="3.1.*" />
+<PackageReference Include="Serilog.Enrichers.CorrelationId" Version="3.0.*" />
+<PackageReference Include="Serilog.Exceptions" Version="8.4.*" />
+```
+
+**1.2 Configure Serilog (Program.cs)**
+
+```csharp
+using Serilog;
+using Serilog.Events;
+using Serilog.Exceptions;
+
+var builder = WebApplication.CreateBuilder(args);
+
+// Configure Serilog
+Log.Logger = new LoggerConfiguration()
+    .ReadFrom.Configuration(builder.Configuration)
+    .Enrich.FromLogContext()
+    .Enrich.WithMachineName()
+    .Enrich.WithEnvironmentName()
+    .Enrich.WithThreadId()
+    .Enrich.WithCorrelationId()
+    .Enrich.WithExceptionDetails()
+    .Enrich.WithProperty("Application", "EPay")
+    .Enrich.WithProperty("Version", "2.0")
+    .WriteTo.Console(
+        outputTemplate: "[{Timestamp:HH:mm:ss} {Level:u3}] {Message:lj} {Properties:j}{NewLine}{Exception}")
+    .WriteTo.File(
+        path: "logs/epay-.log",
+        rollingInterval: RollingInterval.Day,
+        retainedFileCountLimit: 30,
+        outputTemplate: "{Timestamp:yyyy-MM-dd HH:mm:ss.fff zzz} [{Level:u3}] [{CorrelationId}] {Message:lj} {Properties:j}{NewLine}{Exception}")
+    .WriteTo.ApplicationInsights(
+        builder.Configuration["ApplicationInsights:InstrumentationKey"],
+        TelemetryConverter.Traces)
+    .WriteTo.Seq(
+        serverUrl: builder.Configuration["Seq:ServerUrl"] ?? "http://localhost:5341")
+    .MinimumLevel.Information()
+    .MinimumLevel.Override("Microsoft", LogEventLevel.Warning)
+    .MinimumLevel.Override("System", LogEventLevel.Warning)
+    .CreateLogger();
+
+builder.Host.UseSerilog();
+
+try
+{
+    Log.Information("Starting EPay API application");
+
+    // ... rest of application setup
+
+    var app = builder.Build();
+
+    // Add request logging middleware
+    app.UseSerilogRequestLogging(options =>
+    {
+        options.MessageTemplate = "HTTP {RequestMethod} {RequestPath} responded {StatusCode} in {Elapsed:0.0000} ms";
+        options.EnrichDiagnosticContext = (diagnosticContext, httpContext) =>
+        {
+            diagnosticContext.Set("RequestHost", httpContext.Request.Host.Value);
+            diagnosticContext.Set("RequestScheme", httpContext.Request.Scheme);
+            diagnosticContext.Set("UserAgent", httpContext.Request.Headers["User-Agent"].ToString());
+            diagnosticContext.Set("UserName", httpContext.User?.Identity?.Name);
+            diagnosticContext.Set("ClientIP", httpContext.Connection.RemoteIpAddress?.ToString());
+        };
+    });
+
+    app.Run();
+}
+catch (Exception ex)
+{
+    Log.Fatal(ex, "Application terminated unexpectedly");
+}
+finally
+{
+    Log.CloseAndFlush();
+}
+```
+
+**1.3 Detailed Configuration (appsettings.json)**
+
+```json
+{
+  "Serilog": {
+    "Using": [
+      "Serilog.Sinks.Console",
+      "Serilog.Sinks.File",
+      "Serilog.Sinks.ApplicationInsights",
+      "Serilog.Sinks.Seq"
+    ],
+    "MinimumLevel": {
+      "Default": "Information",
+      "Override": {
+        "Microsoft": "Warning",
+        "Microsoft.AspNetCore": "Warning",
+        "System": "Warning",
+        "EPay": "Debug"
+      }
+    },
+    "WriteTo": [
+      {
+        "Name": "Console",
+        "Args": {
+          "theme": "Serilog.Sinks.SystemConsole.Themes.AnsiConsoleTheme::Code, Serilog.Sinks.Console"
+        }
+      },
+      {
+        "Name": "File",
+        "Args": {
+          "path": "logs/epay-.log",
+          "rollingInterval": "Day",
+          "retainedFileCountLimit": 30,
+          "fileSizeLimitBytes": 104857600,
+          "rollOnFileSizeLimit": true,
+          "shared": true,
+          "flushToDiskInterval": "00:00:01"
+        }
+      },
+      {
+        "Name": "File",
+        "Args": {
+          "path": "logs/epay-errors-.log",
+          "rollingInterval": "Day",
+          "retainedFileCountLimit": 90,
+          "restrictedToMinimumLevel": "Error"
+        }
+      },
+      {
+        "Name": "ApplicationInsights",
+        "Args": {
+          "restrictedToMinimumLevel": "Information",
+          "telemetryConverter": "Serilog.Sinks.ApplicationInsights.TelemetryConverters.TraceTelemetryConverter, Serilog.Sinks.ApplicationInsights"
+        }
+      },
+      {
+        "Name": "Seq",
+        "Args": {
+          "serverUrl": "http://localhost:5341",
+          "apiKey": "your-api-key-here"
+        }
+      }
+    ],
+    "Enrich": [
+      "FromLogContext",
+      "WithMachineName",
+      "WithEnvironmentName",
+      "WithThreadId",
+      "WithExceptionDetails",
+      "WithCorrelationId"
+    ],
+    "Properties": {
+      "Application": "EPay",
+      "Environment": "Development"
+    }
+  },
+  "ApplicationInsights": {
+    "InstrumentationKey": "your-instrumentation-key",
+    "EnableAdaptiveSampling": true,
+    "EnablePerformanceCounterCollectionModule": true
+  },
+  "Seq": {
+    "ServerUrl": "http://localhost:5341",
+    "ApiKey": ""
+  }
+}
+```
+
+**1.4 Correlation ID Middleware**
+
+```csharp
+// EPay.API/Middleware/CorrelationIdMiddleware.cs
+public class CorrelationIdMiddleware
+{
+    private readonly RequestDelegate _next;
+    private const string CorrelationIdHeader = "X-Correlation-ID";
+
+    public CorrelationIdMiddleware(RequestDelegate next)
+    {
+        _next = next;
+    }
+
+    public async Task InvokeAsync(HttpContext context)
+    {
+        var correlationId = context.Request.Headers[CorrelationIdHeader].FirstOrDefault()
+            ?? Guid.NewGuid().ToString();
+
+        context.Items[CorrelationIdHeader] = correlationId;
+        context.Response.Headers.Add(CorrelationIdHeader, correlationId);
+
+        using (LogContext.PushProperty("CorrelationId", correlationId))
+        {
+            await _next(context);
+        }
+    }
+}
+
+// Register in Program.cs
+app.UseMiddleware<CorrelationIdMiddleware>();
+```
+
+**1.5 Logging in Controllers**
+
+```csharp
+// EPay.API/Controllers/PaymentController.cs
+[ApiController]
+[Route("api/[controller]")]
+public class PaymentController : ControllerBase
+{
+    private readonly IPaymentService _paymentService;
+    private readonly ILogger<PaymentController> _logger;
+
+    public PaymentController(
+        IPaymentService paymentService,
+        ILogger<PaymentController> logger)
+    {
+        _paymentService = paymentService;
+        _logger = logger;
+    }
+
+    [HttpPost("create")]
+    public async Task<IActionResult> CreatePayment([FromBody] CreatePaymentRequest request)
+    {
+        using (_logger.BeginScope(new Dictionary<string, object>
+        {
+            ["CustomerNumber"] = request.CustomerNumber,
+            ["InvoiceCount"] = request.InvoiceNumbers.Count,
+            ["TotalAmount"] = request.TotalAmount
+        }))
+        {
+            _logger.LogInformation(
+                "Creating payment for customer {CustomerNumber} with {InvoiceCount} invoices totaling {TotalAmount:C}",
+                request.CustomerNumber,
+                request.InvoiceNumbers.Count,
+                request.TotalAmount);
+
+            try
+            {
+                var payment = await _paymentService.CreatePaymentAsync(request);
+
+                _logger.LogInformation(
+                    "Payment created successfully with reference number {ReferenceNumber}",
+                    payment.ReferenceNumber);
+
+                return Ok(payment);
+            }
+            catch (ValidationException ex)
+            {
+                _logger.LogWarning(ex,
+                    "Payment validation failed for customer {CustomerNumber}: {ValidationErrors}",
+                    request.CustomerNumber,
+                    string.Join(", ", ex.Errors));
+
+                return BadRequest(new { errors = ex.Errors });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex,
+                    "Error creating payment for customer {CustomerNumber}",
+                    request.CustomerNumber);
+
+                return StatusCode(500, new { message = "An error occurred while creating payment" });
+            }
+        }
+    }
+
+    [HttpPost("confirm")]
+    public async Task<IActionResult> ConfirmPayment([FromBody] ConfirmPaymentRequest request)
+    {
+        using (_logger.BeginScope(new Dictionary<string, object>
+        {
+            ["ReferenceNumber"] = request.ReferenceNumber,
+            ["PaymentMethod"] = "ACH"
+        }))
+        {
+            _logger.LogInformation(
+                "Confirming payment {ReferenceNumber} through US Bank gateway",
+                request.ReferenceNumber);
+
+            var stopwatch = Stopwatch.StartNew();
+
+            try
+            {
+                var result = await _paymentService.ConfirmPaymentAsync(request);
+                stopwatch.Stop();
+
+                if (result.Success)
+                {
+                    _logger.LogInformation(
+                        "Payment {ReferenceNumber} confirmed successfully with confirmation number {ConfirmationNumber} in {ElapsedMs}ms",
+                        request.ReferenceNumber,
+                        result.ConfirmationNumber,
+                        stopwatch.ElapsedMilliseconds);
+
+                    // Log business event for audit
+                    _logger.LogInformation(
+                        "AUDIT: Payment confirmed - Reference: {ReferenceNumber}, Confirmation: {ConfirmationNumber}, Amount: {Amount:C}, User: {UserName}",
+                        request.ReferenceNumber,
+                        result.ConfirmationNumber,
+                        result.TotalAmount,
+                        User.Identity?.Name);
+
+                    return Ok(result);
+                }
+                else
+                {
+                    stopwatch.Stop();
+
+                    _logger.LogWarning(
+                        "Payment {ReferenceNumber} confirmation failed: {ErrorMessage} (took {ElapsedMs}ms)",
+                        request.ReferenceNumber,
+                        result.ErrorMessage,
+                        stopwatch.ElapsedMilliseconds);
+
+                    return BadRequest(new { message = result.ErrorMessage });
+                }
+            }
+            catch (Exception ex)
+            {
+                stopwatch.Stop();
+
+                _logger.LogError(ex,
+                    "Error confirming payment {ReferenceNumber} after {ElapsedMs}ms",
+                    request.ReferenceNumber,
+                    stopwatch.ElapsedMilliseconds);
+
+                return StatusCode(500, new { message = "Payment processing failed" });
+            }
+        }
+    }
+}
+```
+
+**1.6 Logging in Services**
+
+```csharp
+// EPay.Core/Services/PaymentService.cs
+public class PaymentService : IPaymentService
+{
+    private readonly IPaymentRepository _paymentRepository;
+    private readonly IPaymentGatewayService _gatewayService;
+    private readonly ILogger<PaymentService> _logger;
+
+    public async Task<PaymentConfirmationResult> ConfirmPaymentAsync(ConfirmPaymentRequest request)
+    {
+        _logger.LogDebug(
+            "Starting payment confirmation for reference {ReferenceNumber}",
+            request.ReferenceNumber);
+
+        // Get payment
+        var payment = await _paymentRepository.GetByReferenceNumberAsync(request.ReferenceNumber);
+
+        if (payment == null)
+        {
+            _logger.LogWarning(
+                "Payment not found for reference number {ReferenceNumber}",
+                request.ReferenceNumber);
+
+            return PaymentConfirmationResult.Failed("Payment not found");
+        }
+
+        _logger.LogInformation(
+            "Processing payment {ReferenceNumber} for customer {CustomerNumber}, amount {Amount:C}",
+            payment.ReferenceNumber,
+            payment.CustomerNumber,
+            payment.TotalAmount);
+
+        // Process through US Bank gateway
+        var gatewayRequest = new PaymentGatewayRequest
+        {
+            CustomerNumber = payment.CustomerNumber,
+            TotalAmount = payment.TotalAmount,
+            BankAccountNumber = request.BankAccountNumber,
+            RoutingNumber = request.RoutingNumber,
+            ReferenceNumber = payment.ReferenceNumber
+        };
+
+        var stopwatch = Stopwatch.StartNew();
+        var gatewayResponse = await _gatewayService.ProcessPaymentAsync(gatewayRequest);
+        stopwatch.Stop();
+
+        _logger.LogInformation(
+            "US Bank gateway response received in {ElapsedMs}ms for reference {ReferenceNumber}: Success={Success}",
+            stopwatch.ElapsedMilliseconds,
+            payment.ReferenceNumber,
+            gatewayResponse.Success);
+
+        if (!gatewayResponse.Success)
+        {
+            payment.Status = "Failed";
+            payment.ErrorMessage = gatewayResponse.ErrorMessage;
+            await _paymentRepository.UpdateAsync(payment);
+
+            _logger.LogError(
+                "Payment {ReferenceNumber} failed at gateway: {ErrorMessage}",
+                payment.ReferenceNumber,
+                gatewayResponse.ErrorMessage);
+
+            return PaymentConfirmationResult.Failed(gatewayResponse.ErrorMessage);
+        }
+
+        // Update payment with confirmation
+        payment.Status = "Confirmed";
+        payment.ConfirmationNumber = gatewayResponse.ConfirmationNumber;
+        payment.ConfirmedDate = DateTime.Now;
+        await _paymentRepository.UpdateAsync(payment);
+
+        _logger.LogInformation(
+            "Payment {ReferenceNumber} confirmed successfully with confirmation number {ConfirmationNumber}",
+            payment.ReferenceNumber,
+            gatewayResponse.ConfirmationNumber);
+
+        return PaymentConfirmationResult.Success(payment, gatewayResponse.ConfirmationNumber);
+    }
+}
+```
+
+**1.7 Logging in Repositories (Data Access Layer)**
+
+```csharp
+// EPay.Infrastructure/Repositories/PaymentRepository.cs
+public class PaymentRepository : IPaymentRepository
+{
+    private readonly EPayDbContext _context;
+    private readonly ILogger<PaymentRepository> _logger;
+
+    public async Task<Payment> CreateAsync(Payment payment)
+    {
+        _logger.LogDebug(
+            "Creating payment record for customer {CustomerNumber}, reference {ReferenceNumber}",
+            payment.CustomerNumber,
+            payment.ReferenceNumber);
+
+        var stopwatch = Stopwatch.StartNew();
+
+        try
+        {
+            _context.Payments.Add(payment);
+            await _context.SaveChangesAsync();
+
+            stopwatch.Stop();
+
+            _logger.LogInformation(
+                "Payment record created in {ElapsedMs}ms: Reference={ReferenceNumber}, Customer={CustomerNumber}, Amount={Amount:C}",
+                stopwatch.ElapsedMilliseconds,
+                payment.ReferenceNumber,
+                payment.CustomerNumber,
+                payment.TotalAmount);
+
+            return payment;
+        }
+        catch (DbUpdateException ex)
+        {
+            stopwatch.Stop();
+
+            _logger.LogError(ex,
+                "Database error creating payment for customer {CustomerNumber} after {ElapsedMs}ms",
+                payment.CustomerNumber,
+                stopwatch.ElapsedMilliseconds);
+
+            throw;
+        }
+    }
+
+    public async Task<decimal> GetInvoiceTotalAsync(string customerNumber, int referenceNumber)
+    {
+        _logger.LogDebug(
+            "Calling stored procedure usp_GetEpayTotal for customer {CustomerNumber}, reference {ReferenceNumber}",
+            customerNumber,
+            referenceNumber);
+
+        var stopwatch = Stopwatch.StartNew();
+
+        try
+        {
+            var total = await _context.Database
+                .SqlQueryRaw<decimal>(
+                    "EXEC Datawhse.dbo.usp_GetEpayTotal @CustomerNumber, @ReferenceNumber",
+                    new SqlParameter("@CustomerNumber", customerNumber),
+                    new SqlParameter("@ReferenceNumber", referenceNumber))
+                .FirstOrDefaultAsync();
+
+            stopwatch.Stop();
+
+            _logger.LogInformation(
+                "Retrieved invoice total {Total:C} in {ElapsedMs}ms for customer {CustomerNumber}, reference {ReferenceNumber}",
+                total,
+                stopwatch.ElapsedMilliseconds,
+                customerNumber,
+                referenceNumber);
+
+            return total;
+        }
+        catch (SqlException ex)
+        {
+            stopwatch.Stop();
+
+            _logger.LogError(ex,
+                "SQL error retrieving invoice total for customer {CustomerNumber}, reference {ReferenceNumber} after {ElapsedMs}ms. SQL Error: {SqlErrorNumber}",
+                customerNumber,
+                referenceNumber,
+                stopwatch.ElapsedMilliseconds,
+                ex.Number);
+
+            throw;
+        }
+    }
+}
+```
+
+**1.8 US Bank Gateway Logging (Critical for Payment Processing)**
+
+```csharp
+// EPay.Infrastructure/PaymentGateway/USBankGatewayService.cs
+public class USBankGatewayService : IPaymentGatewayService
+{
+    private readonly IConfiguration _configuration;
+    private readonly ILogger<USBankGatewayService> _logger;
+    private readonly HttpClient _httpClient;
+
+    public async Task<PaymentGatewayResponse> ProcessPaymentAsync(PaymentRequest request)
+    {
+        var gatewayUrl = _configuration["USBank:GatewayUrl"];
+        var merchantId = _configuration["USBank:MerchantId"];
+
+        using (_logger.BeginScope(new Dictionary<string, object>
+        {
+            ["GatewayUrl"] = gatewayUrl,
+            ["MerchantId"] = merchantId,
+            ["ReferenceNumber"] = request.ReferenceNumber,
+            ["CustomerNumber"] = request.CustomerNumber
+        }))
+        {
+            _logger.LogInformation(
+                "Initiating US Bank gateway payment for reference {ReferenceNumber}, amount {Amount:C}",
+                request.ReferenceNumber,
+                request.TotalAmount);
+
+            // Build request (DO NOT LOG SENSITIVE DATA)
+            var formData = new Dictionary<string, string>
+            {
+                { "MerchantID", merchantId },
+                { "CustomerNumber", request.CustomerNumber },
+                { "Amount", request.TotalAmount.ToString("F2") },
+                { "AccountNumber", MaskAccountNumber(request.BankAccountNumber) }, // Masked for logging
+                { "RoutingNumber", request.RoutingNumber },
+                { "ReferenceNumber", request.ReferenceNumber.ToString() }
+            };
+
+            _logger.LogDebug(
+                "Gateway request prepared: MerchantID={MerchantId}, Customer={CustomerNumber}, Amount={Amount}, Reference={ReferenceNumber}",
+                merchantId,
+                request.CustomerNumber,
+                request.TotalAmount,
+                request.ReferenceNumber);
+
+            var stopwatch = Stopwatch.StartNew();
+
+            try
+            {
+                // Post to US Bank gateway
+                var response = await _httpClient.PostAsync(gatewayUrl, new FormUrlEncodedContent(formData));
+                stopwatch.Stop();
+
+                _logger.LogInformation(
+                    "US Bank gateway responded with status {StatusCode} in {ElapsedMs}ms for reference {ReferenceNumber}",
+                    (int)response.StatusCode,
+                    stopwatch.ElapsedMilliseconds,
+                    request.ReferenceNumber);
+
+                var responseContent = await response.Content.ReadAsStringAsync();
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    _logger.LogError(
+                        "US Bank gateway returned error status {StatusCode} for reference {ReferenceNumber}. Response: {ResponseContent}",
+                        (int)response.StatusCode,
+                        request.ReferenceNumber,
+                        responseContent);
+
+                    return new PaymentGatewayResponse
+                    {
+                        Success = false,
+                        ErrorMessage = $"Gateway error: {response.StatusCode}"
+                    };
+                }
+
+                // Parse response
+                var confirmationNumber = ParseConfirmationNumber(responseContent);
+
+                _logger.LogInformation(
+                    "Payment processed successfully through US Bank gateway. Reference: {ReferenceNumber}, Confirmation: {ConfirmationNumber}, Duration: {ElapsedMs}ms",
+                    request.ReferenceNumber,
+                    confirmationNumber,
+                    stopwatch.ElapsedMilliseconds);
+
+                // AUDIT LOG - Critical business event
+                _logger.LogInformation(
+                    "AUDIT: US Bank payment processed - Reference: {ReferenceNumber}, Confirmation: {ConfirmationNumber}, Customer: {CustomerNumber}, Amount: {Amount:C}, Duration: {ElapsedMs}ms",
+                    request.ReferenceNumber,
+                    confirmationNumber,
+                    request.CustomerNumber,
+                    request.TotalAmount,
+                    stopwatch.ElapsedMilliseconds);
+
+                return new PaymentGatewayResponse
+                {
+                    Success = true,
+                    ConfirmationNumber = confirmationNumber,
+                    TransactionDate = DateTime.Now
+                };
+            }
+            catch (HttpRequestException ex)
+            {
+                stopwatch.Stop();
+
+                _logger.LogError(ex,
+                    "HTTP error communicating with US Bank gateway for reference {ReferenceNumber} after {ElapsedMs}ms. Gateway URL: {GatewayUrl}",
+                    request.ReferenceNumber,
+                    stopwatch.ElapsedMilliseconds,
+                    gatewayUrl);
+
+                return new PaymentGatewayResponse
+                {
+                    Success = false,
+                    ErrorMessage = "Payment gateway communication error"
+                };
+            }
+            catch (Exception ex)
+            {
+                stopwatch.Stop();
+
+                _logger.LogCritical(ex,
+                    "CRITICAL: Unexpected error processing payment through US Bank gateway for reference {ReferenceNumber} after {ElapsedMs}ms",
+                    request.ReferenceNumber,
+                    stopwatch.ElapsedMilliseconds);
+
+                return new PaymentGatewayResponse
+                {
+                    Success = false,
+                    ErrorMessage = "Payment processing failed"
+                };
+            }
+        }
+    }
+
+    private string MaskAccountNumber(string accountNumber)
+    {
+        if (string.IsNullOrEmpty(accountNumber) || accountNumber.Length < 4)
+            return "****";
+
+        return "****" + accountNumber.Substring(accountNumber.Length - 4);
+    }
+}
+```
+
+---
+
+#### **2. Frontend Logging (React/TypeScript)**
+
+**2.1 Install Logging Packages**
+
+```bash
+npm install winston
+npm install @microsoft/applicationinsights-web
+npm install @sentry/react @sentry/tracing
+```
+
+**2.2 Configure Winston Logger**
+
+```typescript
+// src/utils/logger.ts
+import winston from 'winston';
+import { ApplicationInsights } from '@microsoft/applicationinsights-web';
+
+// Initialize Application Insights
+const appInsights = new ApplicationInsights({
+  config: {
+    instrumentationKey: process.env.REACT_APP_APPINSIGHTS_KEY,
+    enableAutoRouteTracking: true,
+    enableCorsCorrelation: true,
+    enableRequestHeaderTracking: true,
+    enableResponseHeaderTracking: true,
+  }
+});
+appInsights.loadAppInsights();
+
+// Create Winston logger
+const logger = winston.createLogger({
+  level: process.env.NODE_ENV === 'production' ? 'info' : 'debug',
+  format: winston.format.combine(
+    winston.format.timestamp(),
+    winston.format.errors({ stack: true }),
+    winston.format.json()
+  ),
+  defaultMeta: {
+    service: 'epay-frontend',
+    environment: process.env.NODE_ENV,
+  },
+  transports: [
+    new winston.transports.Console({
+      format: winston.format.combine(
+        winston.format.colorize(),
+        winston.format.simple()
+      ),
+    }),
+  ],
+});
+
+// Wrapper to send logs to Application Insights
+export const log = {
+  debug: (message: string, meta?: any) => {
+    logger.debug(message, meta);
+  },
+
+  info: (message: string, meta?: any) => {
+    logger.info(message, meta);
+    appInsights.trackTrace({ message, severityLevel: 1, properties: meta });
+  },
+
+  warn: (message: string, meta?: any) => {
+    logger.warn(message, meta);
+    appInsights.trackTrace({ message, severityLevel: 2, properties: meta });
+  },
+
+  error: (message: string, error?: Error, meta?: any) => {
+    logger.error(message, { error, ...meta });
+    appInsights.trackException({
+      exception: error || new Error(message),
+      properties: meta
+    });
+  },
+
+  // Track page views
+  pageView: (name: string, url?: string, properties?: any) => {
+    appInsights.trackPageView({ name, uri: url, properties });
+  },
+
+  // Track custom events
+  event: (name: string, properties?: any, measurements?: any) => {
+    appInsights.trackEvent({ name, properties, measurements });
+  },
+
+  // Track metrics
+  metric: (name: string, average: number, properties?: any) => {
+    appInsights.trackMetric({ name, average, properties });
+  },
+};
+
+export { appInsights };
+```
+
+**2.3 API Client with Logging**
+
+```typescript
+// src/services/http/httpClient.ts
+import axios, { AxiosError, AxiosRequestConfig, AxiosResponse } from 'axios';
+import { log } from '@utils/logger';
+
+const httpClient = axios.create({
+  baseURL: process.env.REACT_APP_API_URL || 'https://localhost:7001/api',
+  timeout: 30000,
+  headers: {
+    'Content-Type': 'application/json',
+  },
+});
+
+// Request interceptor
+httpClient.interceptors.request.use(
+  (config: AxiosRequestConfig) => {
+    const token = localStorage.getItem('token');
+    const correlationId = generateCorrelationId();
+
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+
+    config.headers['X-Correlation-ID'] = correlationId;
+
+    log.debug('API Request', {
+      method: config.method?.toUpperCase(),
+      url: config.url,
+      correlationId,
+    });
+
+    // Track API call start time
+    config.metadata = { startTime: new Date() };
+
+    return config;
+  },
+  (error: AxiosError) => {
+    log.error('API Request Error', error);
+    return Promise.reject(error);
+  }
+);
+
+// Response interceptor
+httpClient.interceptors.response.use(
+  (response: AxiosResponse) => {
+    const duration = new Date().getTime() - response.config.metadata.startTime.getTime();
+    const correlationId = response.config.headers['X-Correlation-ID'];
+
+    log.info('API Response', {
+      method: response.config.method?.toUpperCase(),
+      url: response.config.url,
+      status: response.status,
+      duration,
+      correlationId,
+    });
+
+    // Track API performance
+    log.metric('api_response_time', duration, {
+      endpoint: response.config.url,
+      method: response.config.method,
+      status: response.status,
+    });
+
+    return response;
+  },
+  (error: AxiosError) => {
+    const duration = error.config?.metadata
+      ? new Date().getTime() - error.config.metadata.startTime.getTime()
+      : 0;
+
+    if (error.response) {
+      // Server responded with error status
+      log.error('API Error Response', error, {
+        method: error.config?.method?.toUpperCase(),
+        url: error.config?.url,
+        status: error.response.status,
+        statusText: error.response.statusText,
+        duration,
+        correlationId: error.config?.headers['X-Correlation-ID'],
+        data: error.response.data,
+      });
+
+      if (error.response.status === 401) {
+        log.warn('Unauthorized - redirecting to login');
+        localStorage.removeItem('token');
+        window.location.href = '/login';
+      }
+    } else if (error.request) {
+      // Request made but no response
+      log.error('API No Response', error, {
+        method: error.config?.method?.toUpperCase(),
+        url: error.config?.url,
+        duration,
+      });
+    } else {
+      // Error setting up request
+      log.error('API Request Setup Error', error);
+    }
+
+    return Promise.reject(error);
+  }
+);
+
+function generateCorrelationId(): string {
+  return `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+}
+
+export default httpClient;
+```
+
+**2.4 Component-Level Logging**
+
+```typescript
+// src/pages/InvoicePage/InvoiceSearch.tsx
+import { useEffect } from 'react';
+import { log } from '@utils/logger';
+
+export const InvoiceSearch: React.FC = () => {
+  const dispatch = useAppDispatch();
+  const { invoices, loading, error } = useAppSelector((state) => state.invoice);
+
+  useEffect(() => {
+    log.pageView('Invoice Search', window.location.pathname);
+  }, []);
+
+  const handleSearch = async () => {
+    const startTime = performance.now();
+
+    log.info('Invoice search initiated', {
+      filters: {
+        invoiceNumber: filters.invoiceNumber,
+        poNumber: filters.poNumber,
+        dateRange: { from: filters.fromDate, to: filters.toDate },
+      },
+    });
+
+    try {
+      await dispatch(searchInvoices(filters)).unwrap();
+
+      const duration = performance.now() - startTime;
+
+      log.info('Invoice search completed', {
+        resultCount: invoices.length,
+        duration,
+      });
+
+      log.metric('invoice_search_duration', duration);
+
+      log.event('invoice_search_success', {
+        resultCount: invoices.length,
+        hasFilters: !!(filters.invoiceNumber || filters.poNumber),
+      });
+    } catch (error) {
+      const duration = performance.now() - startTime;
+
+      log.error('Invoice search failed', error as Error, {
+        filters,
+        duration,
+      });
+
+      log.event('invoice_search_failure', {
+        errorMessage: (error as Error).message,
+      });
+    }
+  };
+
+  return (
+    // ... component JSX
+  );
+};
+```
+
+**2.5 Error Boundary with Logging**
+
+```typescript
+// src/components/common/ErrorBoundary.tsx
+import React, { Component, ErrorInfo, ReactNode } from 'react';
+import { log } from '@utils/logger';
+
+interface Props {
+  children: ReactNode;
+}
+
+interface State {
+  hasError: boolean;
+  error?: Error;
+}
+
+export class ErrorBoundary extends Component<Props, State> {
+  constructor(props: Props) {
+    super(props);
+    this.state = { hasError: false };
+  }
+
+  static getDerivedStateFromError(error: Error): State {
+    return { hasError: true, error };
+  }
+
+  componentDidCatch(error: Error, errorInfo: ErrorInfo) {
+    log.error('React Error Boundary caught error', error, {
+      componentStack: errorInfo.componentStack,
+      errorBoundary: true,
+    });
+
+    log.event('react_error_boundary_triggered', {
+      errorMessage: error.message,
+      errorStack: error.stack,
+    });
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div style={{ padding: '20px', textAlign: 'center' }}>
+          <h1>Something went wrong</h1>
+          <p>We've logged the error and will investigate.</p>
+          <button onClick={() => window.location.reload()}>
+            Reload Page
+          </button>
+        </div>
+      );
+    }
+
+    return this.props.children;
+  }
+}
+```
+
+**2.6 Redux Action Logging**
+
+```typescript
+// src/store/middleware/loggingMiddleware.ts
+import { Middleware } from '@reduxjs/toolkit';
+import { log } from '@utils/logger';
+
+export const loggingMiddleware: Middleware = (store) => (next) => (action) => {
+  const startTime = performance.now();
+
+  log.debug('Redux Action Dispatched', {
+    type: action.type,
+    payload: action.payload,
+  });
+
+  const result = next(action);
+
+  const duration = performance.now() - startTime;
+
+  log.debug('Redux Action Completed', {
+    type: action.type,
+    duration,
+  });
+
+  // Track slow actions
+  if (duration > 100) {
+    log.warn('Slow Redux Action', {
+      type: action.type,
+      duration,
+    });
+  }
+
+  return result;
+};
+
+// Add to store configuration
+export const store = configureStore({
+  reducer: {
+    auth: authReducer,
+    invoice: invoiceReducer,
+    payment: paymentReducer,
+  },
+  middleware: (getDefaultMiddleware) =>
+    getDefaultMiddleware().concat(loggingMiddleware),
+});
+```
+
+---
+
+#### **3. Security & Audit Logging**
+
+**3.1 Security Event Logging**
+
+```csharp
+// EPay.API/Middleware/SecurityAuditMiddleware.cs
+public class SecurityAuditMiddleware
+{
+    private readonly RequestDelegate _next;
+    private readonly ILogger<SecurityAuditMiddleware> _logger;
+
+    public async Task InvokeAsync(HttpContext context)
+    {
+        // Log authentication attempts
+        if (context.Request.Path.StartsWithSegments("/api/auth/login"))
+        {
+            var username = await GetUsernameFromRequest(context.Request);
+
+            _logger.LogInformation(
+                "SECURITY: Login attempt for user {Username} from IP {ClientIP}",
+                username,
+                context.Connection.RemoteIpAddress);
+        }
+
+        await _next(context);
+
+        // Log successful authentication
+        if (context.Response.StatusCode == 200 &&
+            context.Request.Path.StartsWithSegments("/api/auth/login"))
+        {
+            _logger.LogInformation(
+                "SECURITY: Successful login for user {Username} from IP {ClientIP}",
+                context.User?.Identity?.Name,
+                context.Connection.RemoteIpAddress);
+        }
+
+        // Log failed authentication
+        if (context.Response.StatusCode == 401)
+        {
+            _logger.LogWarning(
+                "SECURITY: Unauthorized access attempt to {Path} from IP {ClientIP}, User: {Username}",
+                context.Request.Path,
+                context.Connection.RemoteIpAddress,
+                context.User?.Identity?.Name ?? "Anonymous");
+        }
+
+        // Log forbidden access
+        if (context.Response.StatusCode == 403)
+        {
+            _logger.LogWarning(
+                "SECURITY: Forbidden access attempt to {Path} by user {Username} from IP {ClientIP}",
+                context.Request.Path,
+                context.User?.Identity?.Name,
+                context.Connection.RemoteIpAddress);
+        }
+    }
+}
+```
+
+**3.2 Business Audit Logging**
+
+```csharp
+// EPay.Core/Services/AuditService.cs
+public interface IAuditService
+{
+    Task LogPaymentCreatedAsync(Payment payment, string username);
+    Task LogPaymentConfirmedAsync(Payment payment, string confirmationNumber, string username);
+    Task LogPaymentFailedAsync(int referenceNumber, string errorMessage, string username);
+    Task LogInvoiceAccessAsync(string customerNumber, string username);
+}
+
+public class AuditService : IAuditService
+{
+    private readonly ILogger<AuditService> _logger;
+    private readonly IAuditRepository _auditRepository;
+
+    public async Task LogPaymentCreatedAsync(Payment payment, string username)
+    {
+        _logger.LogInformation(
+            "AUDIT: Payment created - Reference: {ReferenceNumber}, Customer: {CustomerNumber}, Amount: {Amount:C}, User: {Username}",
+            payment.ReferenceNumber,
+            payment.CustomerNumber,
+            payment.TotalAmount,
+            username);
+
+        await _auditRepository.CreateAuditRecordAsync(new AuditRecord
+        {
+            EventType = "PaymentCreated",
+            ReferenceNumber = payment.ReferenceNumber,
+            CustomerNumber = payment.CustomerNumber,
+            Amount = payment.TotalAmount,
+            Username = username,
+            Timestamp = DateTime.Now,
+            Details = $"Payment created with {payment.Details.Count} invoices"
+        });
+    }
+
+    public async Task LogPaymentConfirmedAsync(Payment payment, string confirmationNumber, string username)
+    {
+        _logger.LogInformation(
+            "AUDIT: Payment confirmed - Reference: {ReferenceNumber}, Confirmation: {ConfirmationNumber}, Customer: {CustomerNumber}, Amount: {Amount:C}, User: {Username}",
+            payment.ReferenceNumber,
+            confirmationNumber,
+            payment.CustomerNumber,
+            payment.TotalAmount,
+            username);
+
+        await _auditRepository.CreateAuditRecordAsync(new AuditRecord
+        {
+            EventType = "PaymentConfirmed",
+            ReferenceNumber = payment.ReferenceNumber,
+            CustomerNumber = payment.CustomerNumber,
+            Amount = payment.TotalAmount,
+            Username = username,
+            Timestamp = DateTime.Now,
+            Details = $"Payment confirmed with confirmation number {confirmationNumber}"
+        });
+    }
+}
+```
+
+---
+
+#### **4. Performance Monitoring & Metrics**
+
+**4.1 Custom Metrics**
+
+```csharp
+// EPay.Infrastructure/Monitoring/MetricsService.cs
+public interface IMetricsService
+{
+    void TrackPaymentProcessingTime(int referenceNumber, long milliseconds);
+    void TrackDatabaseQueryTime(string queryName, long milliseconds);
+    void TrackGatewayResponseTime(long milliseconds, bool success);
+    void IncrementPaymentCounter(string status);
+}
+
+public class MetricsService : IMetricsService
+{
+    private readonly ILogger<MetricsService> _logger;
+
+    public void TrackPaymentProcessingTime(int referenceNumber, long milliseconds)
+    {
+        _logger.LogInformation(
+            "METRIC: Payment processing time - Reference: {ReferenceNumber}, Duration: {Duration}ms",
+            referenceNumber,
+            milliseconds);
+
+        // Send to Application Insights
+        var telemetry = new MetricTelemetry("PaymentProcessingTime", milliseconds);
+        telemetry.Properties.Add("ReferenceNumber", referenceNumber.ToString());
+        // ... send telemetry
+    }
+
+    public void TrackDatabaseQueryTime(string queryName, long milliseconds)
+    {
+        _logger.LogDebug(
+            "METRIC: Database query time - Query: {QueryName}, Duration: {Duration}ms",
+            queryName,
+            milliseconds);
+
+        if (milliseconds > 1000) // Slow query threshold
+        {
+            _logger.LogWarning(
+                "PERFORMANCE: Slow database query detected - Query: {QueryName}, Duration: {Duration}ms",
+                queryName,
+                milliseconds);
+        }
+    }
+
+    public void TrackGatewayResponseTime(long milliseconds, bool success)
+    {
+        _logger.LogInformation(
+            "METRIC: US Bank gateway response time - Duration: {Duration}ms, Success: {Success}",
+            milliseconds,
+            success);
+
+        if (milliseconds > 5000) // Gateway timeout threshold
+        {
+            _logger.LogWarning(
+                "PERFORMANCE: Slow gateway response - Duration: {Duration}ms",
+                milliseconds);
+        }
+    }
+}
+```
+
+**4.2 Health Checks with Logging**
+
+```csharp
+// Program.cs
+builder.Services.AddHealthChecks()
+    .AddSqlServer(
+        connectionString: builder.Configuration.GetConnectionString("SqlServer"),
+        name: "sql-server",
+        tags: new[] { "db", "sql" })
+    .AddCheck<Db2HealthCheck>("db2", tags: new[] { "db", "db2" })
+    .AddCheck<USBankGatewayHealthCheck>("usbank-gateway", tags: new[] { "external", "payment" });
+
+// EPay.Infrastructure/HealthChecks/Db2HealthCheck.cs
+public class Db2HealthCheck : IHealthCheck
+{
+    private readonly IDb2ConnectionFactory _connectionFactory;
+    private readonly ILogger<Db2HealthCheck> _logger;
+
+    public async Task<HealthCheckResult> CheckHealthAsync(
+        HealthCheckContext context,
+        CancellationToken cancellationToken = default)
+    {
+        var stopwatch = Stopwatch.StartNew();
+
+        try
+        {
+            using var connection = _connectionFactory.CreateConnection();
+            using var command = new iDB2Command("SELECT 1 FROM SYSIBM.SYSDUMMY1", connection);
+            await command.ExecuteScalarAsync(cancellationToken);
+
+            stopwatch.Stop();
+
+            _logger.LogInformation(
+                "HEALTH: DB2 health check passed in {Duration}ms",
+                stopwatch.ElapsedMilliseconds);
+
+            return HealthCheckResult.Healthy($"DB2 connection successful ({stopwatch.ElapsedMilliseconds}ms)");
+        }
+        catch (Exception ex)
+        {
+            stopwatch.Stop();
+
+            _logger.LogError(ex,
+                "HEALTH: DB2 health check failed after {Duration}ms",
+                stopwatch.ElapsedMilliseconds);
+
+            return HealthCheckResult.Unhealthy("DB2 connection failed", ex);
+        }
+    }
+}
+```
+
+---
+
+#### **5. Log Aggregation & Monitoring Setup**
+
+**5.1 Development Environment - Seq**
+
+```bash
+# Run Seq in Docker
+docker run -d --name seq -e ACCEPT_EULA=Y -p 5341:80 datalust/seq:latest
+```
+
+Access Seq at: http://localhost:5341
+
+**Benefits:**
+- Real-time log viewing
+- Structured query language
+- Correlation ID tracking
+- Performance analysis
+- Free for development
+
+**5.2 Production Environment - Azure Monitor / Application Insights**
+
+```csharp
+// appsettings.Production.json
+{
+  "ApplicationInsights": {
+    "InstrumentationKey": "your-production-key",
+    "EnableAdaptiveSampling": true,
+    "EnablePerformanceCounterCollectionModule": true,
+    "EnableDependencyTrackingTelemetryModule": true,
+    "EnableEventCounterCollectionModule": true
+  },
+  "Serilog": {
+    "MinimumLevel": {
+      "Default": "Information",
+      "Override": {
+        "Microsoft": "Warning",
+        "System": "Warning"
+      }
+    },
+    "WriteTo": [
+      {
+        "Name": "ApplicationInsights",
+        "Args": {
+          "restrictedToMinimumLevel": "Information"
+        }
+      },
+      {
+        "Name": "File",
+        "Args": {
+          "path": "/var/log/epay/epay-.log",
+          "rollingInterval": "Day",
+          "retainedFileCountLimit": 30
+        }
+      }
+    ]
+  }
+}
+```
+
+**5.3 Alerting Rules**
+
+```yaml
+# Azure Monitor Alert Rules
+alerts:
+  - name: "High Error Rate"
+    condition: "traces | where severityLevel >= 3 | count > 10"
+    window: "5 minutes"
+    action: "Send email to ops team"
+
+  - name: "Payment Gateway Failures"
+    condition: "customEvents | where name == 'PaymentGatewayError' | count > 5"
+    window: "10 minutes"
+    action: "Page on-call engineer"
+
+  - name: "Slow API Response"
+    condition: "requests | where duration > 5000 | count > 10"
+    window: "5 minutes"
+    action: "Send Slack notification"
+
+  - name: "DB2 Connection Failures"
+    condition: "exceptions | where type contains 'DB2' | count > 3"
+    window: "5 minutes"
+    action: "Page database team"
+
+  - name: "Authentication Failures"
+    condition: "traces | where message contains 'SECURITY: Unauthorized' | count > 20"
+    window: "5 minutes"
+    action: "Send security alert"
+```
+
+---
+
+#### **6. Logging Best Practices & Standards**
+
+**6.1 Log Levels**
+
+| Level | When to Use | Examples |
+|-------|-------------|----------|
+| **Trace** | Very detailed diagnostic info | Method entry/exit, variable values |
+| **Debug** | Diagnostic info for developers | SQL queries, API requests, business logic flow |
+| **Information** | General application flow | User actions, business events, successful operations |
+| **Warning** | Unexpected but recoverable | Validation failures, slow queries, deprecated API usage |
+| **Error** | Errors that need attention | Exceptions, failed operations, data errors |
+| **Critical** | System failures | Database down, gateway unavailable, data corruption |
+
+**6.2 Structured Logging Format**
+
+```csharp
+// ✅ GOOD - Structured with properties
+_logger.LogInformation(
+    "Payment {ReferenceNumber} created for customer {CustomerNumber} with amount {Amount:C}",
+    payment.ReferenceNumber,
+    payment.CustomerNumber,
+    payment.TotalAmount);
+
+// ❌ BAD - String concatenation
+_logger.LogInformation(
+    "Payment " + payment.ReferenceNumber + " created for customer " + payment.CustomerNumber);
+```
+
+**6.3 Sensitive Data Handling**
+
+```csharp
+// ✅ GOOD - Mask sensitive data
+_logger.LogInformation(
+    "Processing payment with account ****{LastFour}",
+    accountNumber.Substring(accountNumber.Length - 4));
+
+// ❌ BAD - Logging sensitive data
+_logger.LogInformation(
+    "Processing payment with account {AccountNumber}",
+    accountNumber); // NEVER LOG FULL ACCOUNT NUMBERS
+```
+
+**Sensitive Data to NEVER Log:**
+- Full credit card numbers
+- Full bank account numbers
+- Social Security Numbers
+- Passwords or tokens
+- Personal health information
+- Full routing numbers (mask all but last 4)
+
+**6.4 Correlation ID Pattern**
+
+Every request should have a correlation ID that flows through all layers:
+
+```
+Frontend Request → API Controller → Service → Repository → Database
+     [CORR-123]      [CORR-123]     [CORR-123]  [CORR-123]   [CORR-123]
+```
+
+This allows tracing a single request across all systems.
+
+**6.5 Performance Logging Pattern**
+
+```csharp
+// Always log performance for critical operations
+var stopwatch = Stopwatch.StartNew();
+try
+{
+    var result = await _service.ProcessPaymentAsync(request);
+    stopwatch.Stop();
+
+    _logger.LogInformation(
+        "Payment processed successfully in {ElapsedMs}ms",
+        stopwatch.ElapsedMilliseconds);
+
+    return result;
+}
+catch (Exception ex)
+{
+    stopwatch.Stop();
+
+    _logger.LogError(ex,
+        "Payment processing failed after {ElapsedMs}ms",
+        stopwatch.ElapsedMilliseconds);
+
+    throw;
+}
+```
+
+---
+
+#### **7. Migration Strategy for Logging**
+
+**Phase 1 (Weeks 1-2): Infrastructure Setup**
+- [ ] Install Serilog packages
+- [ ] Configure logging sinks (Console, File, Application Insights, Seq)
+- [ ] Set up correlation ID middleware
+- [ ] Configure log levels per environment
+- [ ] Set up Seq for development
+- [ ] Set up Application Insights for production
+
+**Phase 2 (Weeks 3-4): Backend Logging Implementation**
+- [ ] Add logging to all controllers
+- [ ] Add logging to all services
+- [ ] Add logging to all repositories
+- [ ] Add logging to US Bank gateway integration
+- [ ] Add security audit logging
+- [ ] Add performance metrics
+
+**Phase 3 (Weeks 5-6): Frontend Logging Implementation**
+- [ ] Configure Winston logger
+- [ ] Add Application Insights to React app
+- [ ] Add logging to API client
+- [ ] Add logging to Redux actions
+- [ ] Add error boundary with logging
+- [ ] Add page view tracking
+
+**Phase 4 (Weeks 7-8): Monitoring & Alerting**
+- [ ] Configure Azure Monitor dashboards
+- [ ] Set up alert rules
+- [ ] Configure PagerDuty integration
+- [ ] Create runbooks for common alerts
+- [ ] Train operations team
+
+**Phase 5 (Ongoing): Optimization**
+- [ ] Review log volume and costs
+- [ ] Optimize log levels
+- [ ] Tune sampling rates
+- [ ] Archive old logs
+- [ ] Regular log analysis
+
+---
+
+#### **8. Logging Metrics & KPIs**
+
+**Track These Metrics:**
+
+| Metric | Target | Alert Threshold |
+|--------|--------|-----------------|
+| **Log Volume** | < 10 GB/day | > 15 GB/day |
+| **Error Rate** | < 0.1% | > 1% |
+| **API Response Time (P95)** | < 500ms | > 1000ms |
+| **Payment Processing Time** | < 3 seconds | > 10 seconds |
+| **Gateway Response Time** | < 2 seconds | > 5 seconds |
+| **Database Query Time (P95)** | < 100ms | > 500ms |
+| **Failed Logins** | < 5/hour | > 20/hour |
+| **Payment Failures** | < 1% | > 5% |
+
+---
+
+#### **9. Sample Queries for Log Analysis**
+
+**Seq Queries:**
+
+```sql
+-- Find all payment processing errors
+select * from stream
+where @Level = 'Error'
+  and @Message like '%payment%'
+  and @Timestamp > Now() - 1h
+
+-- Track payment processing times
+select avg(ElapsedMs) as AvgDuration, max(ElapsedMs) as MaxDuration
+from stream
+where @Message like '%Payment processed%'
+  and @Timestamp > Now() - 1h
+
+-- Find slow database queries
+select QueryName, Duration
+from stream
+where @Message like '%METRIC: Database query%'
+  and Duration > 1000
+  and @Timestamp > Now() - 1h
+order by Duration desc
+
+-- Track correlation across layers
+select * from stream
+where CorrelationId = 'abc-123-def'
+order by @Timestamp
+```
+
+**Application Insights (KQL) Queries:**
+
+```kusto
+// Payment processing funnel
+traces
+| where timestamp > ago(1h)
+| where message contains "Payment"
+| summarize count() by message
+| order by count_ desc
+
+// Error rate by endpoint
+requests
+| where timestamp > ago(1h)
+| summarize ErrorRate = countif(success == false) * 100.0 / count() by name
+| where ErrorRate > 1
+| order by ErrorRate desc
+
+// Slow API calls
+requests
+| where timestamp > ago(1h)
+| where duration > 1000
+| project timestamp, name, duration, resultCode
+| order by duration desc
+
+// US Bank gateway performance
+dependencies
+| where timestamp > ago(1h)
+| where name contains "USBank"
+| summarize avg(duration), max(duration), count() by bin(timestamp, 5m)
+| render timechart
+```
+
+---
+
+#### **10. Deliverables - Structured Logging**
+
+✅ **Serilog configured** with multiple sinks (Console, File, Application Insights, Seq)
+✅ **Correlation ID tracking** across all layers
+✅ **Structured logging** in all controllers, services, repositories
+✅ **Security audit logging** for authentication and authorization events
+✅ **Business event logging** for payment lifecycle
+✅ **Performance metrics** for critical operations
+✅ **Frontend logging** with Winston and Application Insights
+✅ **Error tracking** with detailed context
+✅ **Health checks** with logging
+✅ **Alerting rules** configured
+✅ **Log analysis dashboards** in Azure Monitor
+✅ **Documentation** for logging standards and best practices
+
+---
+
 ## Document Control
 
 | Version | Date | Author | Changes |
 |---------|------|--------|---------|
 | 1.0 | 2026-01-20 | Migration Team | Initial version |
+| 1.1 | 2026-01-20 | Migration Team | Added comprehensive structured logging strategy (Phase 10) |
 
 ---
 
 **END OF MIGRATION PLAN**
+
+
 
 
