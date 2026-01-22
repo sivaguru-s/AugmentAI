@@ -11,14 +11,14 @@
 
 This document outlines the comprehensive migration plan for transforming the Finance Credit Direct EPay system from:
 - **Backend:** ASP.NET Web Forms (VB.NET, .NET Framework 3.5) → **ASP.NET Core 8.0 (C#)**
-- **Frontend:** ASP.NET Web Forms → **React 18 with TypeScript**
+- **Frontend:** ASP.NET Web Forms → **Angular 17+ with TypeScript**
 - **Preserving:** Existing UI/UX design, DB2 connectivity, US Bank EPay gateway integration
 
 ### Migration Objectives
 
-✅ **Modernize Technology Stack** - Move to .NET Core 8.0 and React 18  
-✅ **Preserve Design** - Maintain existing UI/UX look and feel  
-✅ **Maintain Integrations** - Keep DB2 and US Bank gateway flows unchanged  
+✅ **Modernize Technology Stack** - Move to .NET Core 8.0 and Angular 17+
+✅ **Preserve Design** - Maintain existing UI/UX look and feel
+✅ **Maintain Integrations** - Keep DB2 and US Bank gateway flows unchanged
 ✅ **Improve Security** - Address all critical vulnerabilities  
 ✅ **Enhance Performance** - Leverage modern framework capabilities  
 ✅ **Enable Scalability** - Cloud-ready architecture  
@@ -108,11 +108,15 @@ This document outlines the comprehensive migration plan for transforming the Fin
 |-----------|-----------|---------|-----------|
 | **Backend Framework** | ASP.NET Core Web API | 8.0 LTS | Modern, cross-platform, high performance |
 | **Language** | C# | 12.0 | Industry standard, better tooling |
-| **Frontend Framework** | React | 18.2+ | Component-based, virtual DOM, large ecosystem |
-| **UI Language** | TypeScript | 5.0+ | Type safety, better IDE support |
-| **UI Component Library** | Material-UI (MUI) | 5.x | Customizable, matches existing design |
-| **State Management** | Redux Toolkit | 2.0+ | Predictable state, dev tools |
-| **HTTP Client** | Axios | 1.6+ | Promise-based, interceptors |
+| **Frontend Framework** | Angular | 17+ | Enterprise-ready, opinionated, complete framework |
+| **UI Language** | TypeScript | 5.0+ | Type safety, better IDE support, Angular first-class |
+| **UI Component Library** | Angular Material | 17+ | Official Material Design, highly customizable |
+| **State Management** | NgRx | 17+ | Redux pattern for Angular, RxJS-based |
+| **HTTP Client** | Angular HttpClient | Built-in | Observable-based, interceptors, type-safe |
+| **Forms** | Angular Reactive Forms | Built-in | Type-safe, validation, dynamic forms |
+| **Routing** | Angular Router | Built-in | Lazy loading, guards, resolvers |
+| **Testing (Frontend)** | Jasmine + Karma | Built-in | Unit testing framework |
+| **Logging (Frontend)** | ngx-logger | 5.x | Angular logging service |
 | **Database (Primary)** | SQL Server | 2019+ | Unchanged |
 | **Database (Legacy)** | IBM DB2 (iSeries) | AS/400 | Unchanged |
 | **DB2 Connector** | IBM.Data.DB2.Core | Latest | .NET Core compatible |
@@ -127,15 +131,16 @@ This document outlines the comprehensive migration plan for transforming the Fin
 
 ```
 ┌─────────────────────────────────────────────────────────────────────┐
-│                         Frontend (React + TypeScript)                │
+│                       Frontend (Angular 17+ TypeScript)              │
 │  ┌──────────────┬──────────────┬──────────────┬──────────────────┐  │
 │  │ Invoice Page │ Confirmation │ History Page │ Admin/Reports    │  │
 │  │ (main)       │ Page         │              │                  │  │
 │  └──────────────┴──────────────┴──────────────┴──────────────────┘  │
 │                                                                       │
-│  State Management: Redux Toolkit                                     │
-│  UI Components: Material-UI (Customized to match existing design)    │
-│  HTTP Client: Axios with Interceptors                                │
+│  State Management: NgRx Store + Effects                              │
+│  UI Components: Angular Material (Customized for Ashley branding)    │
+│  HTTP Client: Angular HttpClient with Interceptors                   │
+│  Forms: Reactive Forms with Validation                               │
 └─────────────────────────────────────────────────────────────────────┘
                                     ↓ HTTPS/REST API
 ┌─────────────────────────────────────────────────────────────────────┐
@@ -196,7 +201,7 @@ We will use the **Strangler Fig Pattern** to gradually replace the legacy system
 |-------|----------|-------------|--------------|
 | **Phase 0** | 2 weeks | Planning & Setup | Environment, tools, team training |
 | **Phase 1** | 4 weeks | Backend API Foundation | Core API, authentication, DB access |
-| **Phase 2** | 6 weeks | Frontend Foundation | React app, routing, state management |
+| **Phase 2** | 6 weeks | Frontend Foundation | Angular app, routing, NgRx state management |
 | **Phase 3** | 8 weeks | Feature Migration (Invoices) | Invoice search, selection, display |
 | **Phase 4** | 6 weeks | Feature Migration (Payments) | Payment flow, US Bank integration |
 | **Phase 5** | 4 weeks | Feature Migration (History) | Payment history, reporting |
@@ -252,8 +257,8 @@ finance-credit-direct-epay-v2/
 │   │   ├── components/               # Reusable components
 │   │   ├── pages/                    # Page components
 │   │   ├── services/                 # API services
-│   │   ├── store/                    # Redux store
-│   │   ├── styles/                   # CSS/SCSS
+│   │   ├── store/                    # NgRx store
+│   │   ├── styles/                   # SCSS
 │   │   ├── types/                    # TypeScript types
 │   │   └── utils/                    # Utilities
 │   ├── package.json
@@ -296,7 +301,7 @@ finance-credit-direct-epay-v2/
 **2.2 Team Training**
 - [ ] .NET Core 8.0 training (for VB.NET developers)
 - [ ] C# language features training
-- [ ] React & TypeScript training
+- [ ] Angular & TypeScript training
 - [ ] RESTful API design principles
 - [ ] Docker & containerization basics
 - [ ] Security best practices
@@ -372,7 +377,7 @@ builder.Services.AddSwaggerGen();
 // Configure CORS
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("AllowReactApp", policy =>
+    options.AddPolicy("AllowAngularApp", policy =>
     {
         policy.WithOrigins("http://localhost:3000", "https://epay.ashleyfurniture.com")
               .AllowAnyHeader()
@@ -416,7 +421,7 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
-app.UseCors("AllowReactApp");
+app.UseCors("AllowAngularApp");
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
@@ -858,319 +863,675 @@ public class CreatePaymentRequest
 
 ### Objectives
 
-- Create React 18 application with TypeScript
-- Set up routing and state management
+- Create Angular 17+ application with TypeScript
+- Set up routing and state management (NgRx)
 - Create UI component library matching existing design
-- Implement authentication flow
+- Implement authentication flow with JWT
 - Create layout and navigation components
+- Configure Angular Material theme for Ashley branding
 
-### Week 1: React Project Setup
+### Week 1: Angular Project Setup
 
-**1.1 Create React App with TypeScript**
+**1.1 Create Angular Application**
 
 ```bash
-npx create-react-app frontend --template typescript
-cd frontend
-npm install @mui/material @emotion/react @emotion/styled
-npm install @reduxjs/toolkit react-redux
-npm install react-router-dom
-npm install axios
-npm install @types/react-router-dom
+# Install Angular CLI globally
+npm install -g @angular/cli@latest
+
+# Create new Angular project with routing and SCSS
+ng new epay-frontend --routing --style=scss --strict
+
+cd epay-frontend
+
+# Install Angular Material and CDK
+ng add @angular/material
+
+# Install NgRx for state management
+ng add @ngrx/store@latest
+ng add @ngrx/effects@latest
+ng add @ngrx/entity@latest
+ng add @ngrx/store-devtools@latest
+
+# Install additional dependencies
+npm install ngx-logger
+npm install @microsoft/applicationinsights-web
+npm install date-fns
 ```
 
 **1.2 Project Structure**
 
 ```
-frontend/src/
-├── components/
-│   ├── common/
-│   │   ├── Button/
-│   │   ├── Input/
-│   │   ├── Table/
-│   │   ├── DatePicker/
-│   │   └── Modal/
+epay-frontend/src/
+├── app/
+│   ├── core/
+│   │   ├── services/
+│   │   │   ├── auth.service.ts
+│   │   │   ├── api.service.ts
+│   │   │   ├── invoice.service.ts
+│   │   │   ├── payment.service.ts
+│   │   │   └── logger.service.ts
+│   │   ├── guards/
+│   │   │   ├── auth.guard.ts
+│   │   │   └── role.guard.ts
+│   │   ├── interceptors/
+│   │   │   ├── auth.interceptor.ts
+│   │   │   ├── error.interceptor.ts
+│   │   │   └── logging.interceptor.ts
+│   │   ├── models/
+│   │   │   ├── invoice.model.ts
+│   │   │   ├── payment.model.ts
+│   │   │   └── user.model.ts
+│   │   └── core.module.ts
+│   ├── shared/
+│   │   ├── components/
+│   │   │   ├── data-table/
+│   │   │   ├── date-picker/
+│   │   │   ├── search-form/
+│   │   │   └── confirmation-dialog/
+│   │   ├── directives/
+│   │   ├── pipes/
+│   │   │   ├── currency-format.pipe.ts
+│   │   │   └── date-format.pipe.ts
+│   │   └── shared.module.ts
+│   ├── features/
+│   │   ├── invoice/
+│   │   │   ├── components/
+│   │   │   ├── services/
+│   │   │   ├── store/
+│   │   │   └── invoice.module.ts
+│   │   ├── payment/
+│   │   ├── history/
+│   │   ├── admin/
+│   │   └── reports/
 │   ├── layout/
-│   │   ├── Header/
-│   │   ├── Footer/
-│   │   ├── Navigation/
-│   │   └── Sidebar/
-│   └── features/
-│       ├── invoices/
-│       ├── payments/
-│       └── history/
-├── pages/
-│   ├── InvoicePage/
-│   ├── ConfirmationPage/
-│   ├── HistoryPage/
-│   └── AdminPage/
-├── services/
-│   ├── api/
-│   │   ├── invoiceApi.ts
-│   │   ├── paymentApi.ts
-│   │   └── authApi.ts
-│   └── http/
-│       └── httpClient.ts
-├── store/
-│   ├── slices/
-│   │   ├── authSlice.ts
-│   │   ├── invoiceSlice.ts
-│   │   └── paymentSlice.ts
-│   └── store.ts
-├── types/
-│   ├── invoice.types.ts
-│   ├── payment.types.ts
-│   └── user.types.ts
-├── utils/
-│   ├── formatters.ts
-│   ├── validators.ts
-│   └── constants.ts
-├── styles/
-│   ├── theme.ts
-│   └── global.css
-├── App.tsx
-└── index.tsx
+│   │   ├── header/
+│   │   ├── footer/
+│   │   ├── navigation/
+│   │   └── sidebar/
+│   ├── store/
+│   │   ├── actions/
+│   │   ├── effects/
+│   │   ├── reducers/
+│   │   ├── selectors/
+│   │   └── app.state.ts
+│   ├── assets/
+│   │   ├── images/
+│   │   └── icons/
+│   ├── environments/
+│   │   ├── environment.ts
+│   │   └── environment.prod.ts
+│   ├── styles/
+│   │   ├── _variables.scss
+│   │   ├── _mixins.scss
+│   │   ├── ashley-theme.scss
+│   │   └── styles.scss
+│   ├── app.component.ts
+│   ├── app.component.html
+│   ├── app.component.scss
+│   ├── app.module.ts
+│   └── app-routing.module.ts
+├── assets/
+├── index.html
+├── main.ts
+└── styles.scss
 ```
 
-**1.3 Configure TypeScript**
+**1.3 Configure TypeScript (tsconfig.json)**
+
+Angular CLI creates this automatically with strict mode enabled:
 
 ```json
 // tsconfig.json
 {
+  "compileOnSave": false,
   "compilerOptions": {
-    "target": "ES2020",
-    "lib": ["ES2020", "DOM", "DOM.Iterable"],
-    "jsx": "react-jsx",
-    "module": "ESNext",
-    "moduleResolution": "node",
-    "strict": true,
-    "esModuleInterop": true,
-    "skipLibCheck": true,
+    "baseUrl": "./",
+    "outDir": "./dist/out-tsc",
     "forceConsistentCasingInFileNames": true,
-    "resolveJsonModule": true,
-    "isolatedModules": true,
-    "noEmit": true,
-    "baseUrl": "src",
+    "strict": true,
+    "noImplicitOverride": true,
+    "noPropertyAccessFromIndexSignature": true,
+    "noImplicitReturns": true,
+    "noFallthroughCasesInSwitch": true,
+    "sourceMap": true,
+    "declaration": false,
+    "downlevelIteration": true,
+    "experimentalDecorators": true,
+    "moduleResolution": "node",
+    "importHelpers": true,
+    "target": "ES2022",
+    "module": "ES2022",
+    "useDefineForClassFields": false,
+    "lib": ["ES2022", "dom"],
     "paths": {
-      "@components/*": ["components/*"],
-      "@pages/*": ["pages/*"],
-      "@services/*": ["services/*"],
-      "@store/*": ["store/*"],
-      "@types/*": ["types/*"],
-      "@utils/*": ["utils/*"]
+      "@core/*": ["src/app/core/*"],
+      "@shared/*": ["src/app/shared/*"],
+      "@features/*": ["src/app/features/*"],
+      "@layout/*": ["src/app/layout/*"],
+      "@environments/*": ["src/environments/*"]
     }
   },
-  "include": ["src"]
-}
-```
-
-### Week 2: Theme & Design System
-
-**2.1 Create Custom Theme (Match Existing Design)**
-
-```typescript
-// src/styles/theme.ts
-import { createTheme } from '@mui/material/styles';
-
-// Colors extracted from existing Ashley Furniture design
-export const theme = createTheme({
-  palette: {
-    primary: {
-      main: '#8B4513', // Ashley brown
-      light: '#A0522D',
-      dark: '#654321',
-      contrastText: '#FFFFFF',
-    },
-    secondary: {
-      main: '#D2691E', // Chocolate
-      light: '#E6A85C',
-      dark: '#8B4513',
-      contrastText: '#FFFFFF',
-    },
-    background: {
-      default: '#F5F5F5',
-      paper: '#FFFFFF',
-    },
-    text: {
-      primary: '#333333',
-      secondary: '#666666',
-    },
-  },
-  typography: {
-    fontFamily: '"Arial", "Helvetica", sans-serif',
-    h1: {
-      fontSize: '2rem',
-      fontWeight: 600,
-    },
-    h2: {
-      fontSize: '1.5rem',
-      fontWeight: 600,
-    },
-    body1: {
-      fontSize: '0.875rem',
-    },
-  },
-  components: {
-    MuiButton: {
-      styleOverrides: {
-        root: {
-          textTransform: 'none',
-          borderRadius: 4,
-        },
-      },
-    },
-    MuiTableCell: {
-      styleOverrides: {
-        head: {
-          backgroundColor: '#8B4513',
-          color: '#FFFFFF',
-          fontWeight: 600,
-        },
-      },
-    },
-  },
-});
-```
-
-**2.2 Create Reusable Components**
-
-```typescript
-// src/components/common/Table/DataTable.tsx
-import { DataGrid, GridColDef } from '@mui/x-data-grid';
-
-interface DataTableProps {
-  columns: GridColDef[];
-  rows: any[];
-  loading?: boolean;
-  onRowClick?: (row: any) => void;
-}
-
-export const DataTable: React.FC<DataTableProps> = ({ columns, rows, loading, onRowClick }) => {
-  return (
-    <DataGrid
-      rows={rows}
-      columns={columns}
-      loading={loading}
-      onRowClick={(params) => onRowClick?.(params.row)}
-      pageSizeOptions={[10, 25, 50, 100]}
-      initialState={{
-        pagination: { paginationModel: { pageSize: 25 } },
-      }}
-      checkboxSelection
-      disableRowSelectionOnClick
-    />
-  );
-};
-```
-
-### Week 3-4: State Management & API Integration
-
-**3.1 Redux Store Setup**
-
-```typescript
-// src/store/store.ts
-import { configureStore } from '@reduxjs/toolkit';
-import authReducer from './slices/authSlice';
-import invoiceReducer from './slices/invoiceSlice';
-import paymentReducer from './slices/paymentSlice';
-
-export const store = configureStore({
-  reducer: {
-    auth: authReducer,
-    invoice: invoiceReducer,
-    payment: paymentReducer,
-  },
-});
-
-export type RootState = ReturnType<typeof store.getState>;
-export type AppDispatch = typeof store.dispatch;
-```
-
-**3.2 Auth Slice**
-
-```typescript
-// src/store/slices/authSlice.ts
-import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
-import { authApi } from '@services/api/authApi';
-
-export const login = createAsyncThunk(
-  'auth/login',
-  async (credentials: { username: string; password: string }) => {
-    const response = await authApi.login(credentials);
-    localStorage.setItem('token', response.token);
-    return response;
+  "angularCompilerOptions": {
+    "enableI18nLegacyMessageIdFormat": false,
+    "strictInjectionParameters": true,
+    "strictInputAccessModifiers": true,
+    "strictTemplates": true
   }
-);
-
-const authSlice = createSlice({
-  name: 'auth',
-  initialState: {
-    user: null,
-    token: localStorage.getItem('token'),
-    isAuthenticated: false,
-    loading: false,
-  },
-  reducers: {
-    logout: (state) => {
-      state.user = null;
-      state.token = null;
-      state.isAuthenticated = false;
-      localStorage.removeItem('token');
-    },
-  },
-  extraReducers: (builder) => {
-    builder
-      .addCase(login.pending, (state) => {
-        state.loading = true;
-      })
-      .addCase(login.fulfilled, (state, action) => {
-        state.user = action.payload.user;
-        state.token = action.payload.token;
-        state.isAuthenticated = true;
-        state.loading = false;
-      })
-      .addCase(login.rejected, (state) => {
-        state.loading = false;
-      });
-  },
-});
-
-export const { logout } = authSlice.actions;
-export default authSlice.reducer;
+}
 ```
 
-**3.3 HTTP Client with Interceptors**
+### Week 2: Angular Material Theme & Design System
 
-```typescript
-// src/services/http/httpClient.ts
-import axios from 'axios';
+**2.1 Create Custom Angular Material Theme (Ashley Direct Branding)**
 
-const httpClient = axios.create({
-  baseURL: process.env.REACT_APP_API_URL || 'https://localhost:7001/api',
-  timeout: 30000,
-  headers: {
-    'Content-Type': 'application/json',
-  },
-});
+```scss
+// src/styles/ashley-theme.scss
+@use '@angular/material' as mat;
 
-// Request interceptor - add auth token
-httpClient.interceptors.request.use(
-  (config) => {
-    const token = localStorage.getItem('token');
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
-    return config;
-  },
-  (error) => Promise.reject(error)
+// Include the common styles for Angular Material
+@include mat.core();
+
+// Define Ashley Direct color palettes
+$ashley-orange-palette: (
+  50: #fff3e0,
+  100: #ffe0b2,
+  200: #ffcc80,
+  300: #ffb74d,
+  400: #ffa726,
+  500: #ff6600,  // Primary Ashley Orange
+  600: #fb8c00,
+  700: #f57c00,
+  800: #ef6c00,
+  900: #e65100,
+  contrast: (
+    50: rgba(black, 0.87),
+    100: rgba(black, 0.87),
+    200: rgba(black, 0.87),
+    300: rgba(black, 0.87),
+    400: rgba(black, 0.87),
+    500: white,
+    600: white,
+    700: white,
+    800: white,
+    900: white,
+  )
 );
 
-// Response interceptor - handle errors
-httpClient.interceptors.response.use(
-  (response) => response,
-  (error) => {
-    if (error.response?.status === 401) {
-      localStorage.removeItem('token');
-      window.location.href = '/login';
+$ashley-gray-palette: (
+  50: #fafafa,
+  100: #f5f5f5,
+  200: #eeeeee,
+  300: #e0e0e0,
+  400: #cccccc,
+  500: #9e9e9e,
+  600: #757575,
+  700: #616161,
+  800: #424242,
+  900: #212121,
+  contrast: (
+    50: rgba(black, 0.87),
+    100: rgba(black, 0.87),
+    200: rgba(black, 0.87),
+    300: rgba(black, 0.87),
+    400: rgba(black, 0.87),
+    500: white,
+    600: white,
+    700: white,
+    800: white,
+    900: white,
+  )
+);
+
+// Create the theme palettes
+$ashley-primary: mat.define-palette($ashley-orange-palette, 500);
+$ashley-accent: mat.define-palette($ashley-gray-palette, 400);
+$ashley-warn: mat.define-palette(mat.$red-palette);
+
+// Create the theme
+$ashley-theme: mat.define-light-theme((
+  color: (
+    primary: $ashley-primary,
+    accent: $ashley-accent,
+    warn: $ashley-warn,
+  ),
+  typography: mat.define-typography-config(
+    $font-family: 'Arial, Helvetica, sans-serif',
+    $headline-1: mat.define-typography-level(24px, 32px, 700),
+    $headline-2: mat.define-typography-level(18px, 24px, 700),
+    $headline-3: mat.define-typography-level(16px, 22px, 600),
+    $body-1: mat.define-typography-level(13px, 20px, 400),
+    $body-2: mat.define-typography-level(12px, 18px, 400),
+    $button: mat.define-typography-level(14px, 14px, 500),
+  ),
+  density: 0,
+));
+
+// Include theme styles for core and each component
+@include mat.all-component-themes($ashley-theme);
+
+// Custom component overrides for Ashley branding
+.mat-mdc-raised-button.mat-primary {
+  background-color: #ff6600 !important;
+  color: white !important;
+
+  &:hover:not([disabled]) {
+    background-color: #e55a00 !important;
+  }
+}
+
+.mat-mdc-raised-button.mat-accent {
+  background-color: #cccccc !important;
+  color: #333333 !important;
+
+  &:hover:not([disabled]) {
+    background-color: #b3b3b3 !important;
+  }
+}
+
+// Tab customization
+.mat-mdc-tab.mdc-tab--active {
+  .mdc-tab__text-label {
+    color: #ff6600;
+  }
+
+  .mdc-tab-indicator__content--underline {
+    border-color: #ff6600;
+    border-width: 3px;
+  }
+}
+
+// Table customization
+.mat-mdc-table {
+  .mat-mdc-header-row {
+    background-color: #e0e0e0;
+  }
+
+  .mat-mdc-row:nth-child(even) {
+    background-color: #f5f5f5;
+  }
+
+  .mat-mdc-row:hover {
+    background-color: #f0f0f0;
+  }
+}
+
+// Form field customization
+.mat-mdc-form-field {
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: 13px;
+}
+```
+
+**2.2 Configure Global Styles**
+
+```scss
+// src/styles/styles.scss
+@use './ashley-theme.scss' as *;
+@use './variables' as *;
+
+// Global styles
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: 13px;
+  color: #333333;
+  background-color: #ffffff;
+}
+
+// Ashley Direct specific styles
+.ashley-account-bar {
+  background-color: #f5deb3;
+  padding: 8px 16px;
+  text-align: right;
+  font-size: 12px;
+}
+
+.ashley-page-title {
+  font-size: 24px;
+  font-weight: bold;
+  color: #333333;
+  margin-bottom: 16px;
+}
+
+.ashley-section-title {
+  font-size: 18px;
+  font-weight: bold;
+  color: #333333;
+  margin-bottom: 12px;
+}
+
+// Utility classes
+.text-right {
+  text-align: right;
+}
+
+.text-center {
+  text-align: center;
+}
+
+.currency {
+  text-align: right;
+  font-family: monospace;
+}
+```
+
+**2.3 Create Shared Data Table Component**
+
+```typescript
+// src/app/shared/components/data-table/data-table.component.ts
+import { Component, Input, Output, EventEmitter, ViewChild } from '@angular/core';
+import { MatTableDataSource } from '@angular/material/table';
+import { MatPaginator } from '@angular/material/paginator';
+import { MatSort } from '@angular/material/sort';
+import { SelectionModel } from '@angular/cdk/collections';
+
+@Component({
+  selector: 'app-data-table',
+  templateUrl: './data-table.component.html',
+  styleUrls: ['./data-table.component.scss']
+})
+export class DataTableComponent<T> {
+  @Input() columns: TableColumn[] = [];
+  @Input() set data(value: T[]) {
+    this.dataSource.data = value;
+  }
+  @Input() selectable = false;
+  @Input() loading = false;
+
+  @Output() rowClick = new EventEmitter<T>();
+  @Output() selectionChange = new EventEmitter<T[]>();
+
+  @ViewChild(MatPaginator) paginator!: MatPaginator;
+  @ViewChild(MatSort) sort!: MatSort;
+
+  dataSource = new MatTableDataSource<T>();
+  selection = new SelectionModel<T>(true, []);
+
+  ngAfterViewInit() {
+    this.dataSource.paginator = this.paginator;
+    this.dataSource.sort = this.sort;
+  }
+
+  get displayedColumns(): string[] {
+    const cols = this.columns.map(c => c.key);
+    return this.selectable ? ['select', ...cols] : cols;
+  }
+
+  isAllSelected(): boolean {
+    const numSelected = this.selection.selected.length;
+    const numRows = this.dataSource.data.length;
+    return numSelected === numRows;
+  }
+
+  masterToggle(): void {
+    this.isAllSelected() ?
+      this.selection.clear() :
+      this.dataSource.data.forEach(row => this.selection.select(row));
+    this.selectionChange.emit(this.selection.selected);
+  }
+
+  onRowClick(row: T): void {
+    this.rowClick.emit(row);
+  }
+}
+
+export interface TableColumn {
+  key: string;
+  label: string;
+  type?: 'text' | 'number' | 'currency' | 'date' | 'link';
+  align?: 'left' | 'center' | 'right';
+  sortable?: boolean;
+}
+```
+
+### Week 3-4: NgRx State Management & API Integration
+
+**3.1 NgRx Store Setup**
+
+```typescript
+// src/app/store/app.state.ts
+import { AuthState } from './reducers/auth.reducer';
+import { InvoiceState } from './reducers/invoice.reducer';
+import { PaymentState } from './reducers/payment.reducer';
+
+export interface AppState {
+  auth: AuthState;
+  invoice: InvoiceState;
+  payment: PaymentState;
+}
+```
+
+```typescript
+// src/app/app.module.ts
+import { StoreModule } from '@ngrx/store';
+import { EffectsModule } from '@ngrx/effects';
+import { StoreDevtoolsModule } from '@ngrx/store-devtools';
+import { authReducer } from './store/reducers/auth.reducer';
+import { invoiceReducer } from './store/reducers/invoice.reducer';
+import { paymentReducer } from './store/reducers/payment.reducer';
+import { AuthEffects } from './store/effects/auth.effects';
+import { InvoiceEffects } from './store/effects/invoice.effects';
+import { PaymentEffects } from './store/effects/payment.effects';
+
+@NgModule({
+  imports: [
+    StoreModule.forRoot({
+      auth: authReducer,
+      invoice: invoiceReducer,
+      payment: paymentReducer,
+    }),
+    EffectsModule.forRoot([AuthEffects, InvoiceEffects, PaymentEffects]),
+    StoreDevtoolsModule.instrument({
+      maxAge: 25,
+      logOnly: environment.production,
+    }),
+  ],
+})
+export class AppModule {}
+```
+
+**3.2 Auth State Management**
+
+```typescript
+// src/app/store/actions/auth.actions.ts
+import { createAction, props } from '@ngrx/store';
+import { User } from '@core/models/user.model';
+
+export const login = createAction(
+  '[Auth] Login',
+  props<{ username: string; password: string }>()
+);
+
+export const loginSuccess = createAction(
+  '[Auth] Login Success',
+  props<{ user: User; token: string }>()
+);
+
+export const loginFailure = createAction(
+  '[Auth] Login Failure',
+  props<{ error: string }>()
+);
+
+export const logout = createAction('[Auth] Logout');
+```
+
+```typescript
+// src/app/store/reducers/auth.reducer.ts
+import { createReducer, on } from '@ngrx/store';
+import * as AuthActions from '../actions/auth.actions';
+import { User } from '@core/models/user.model';
+
+export interface AuthState {
+  user: User | null;
+  token: string | null;
+  isAuthenticated: boolean;
+  loading: boolean;
+  error: string | null;
+}
+
+const initialState: AuthState = {
+  user: null,
+  token: localStorage.getItem('token'),
+  isAuthenticated: !!localStorage.getItem('token'),
+  loading: false,
+  error: null,
+};
+
+export const authReducer = createReducer(
+  initialState,
+  on(AuthActions.login, (state) => ({
+    ...state,
+    loading: true,
+    error: null,
+  })),
+  on(AuthActions.loginSuccess, (state, { user, token }) => ({
+    ...state,
+    user,
+    token,
+    isAuthenticated: true,
+    loading: false,
+    error: null,
+  })),
+  on(AuthActions.loginFailure, (state, { error }) => ({
+    ...state,
+    loading: false,
+    error,
+  })),
+  on(AuthActions.logout, () => initialState)
+);
+```
+
+```typescript
+// src/app/store/effects/auth.effects.ts
+import { Injectable } from '@angular/core';
+import { Actions, createEffect, ofType } from '@ngrx/effects';
+import { of } from 'rxjs';
+import { map, catchError, switchMap, tap } from 'rxjs/operators';
+import { Router } from '@angular/router';
+import * as AuthActions from '../actions/auth.actions';
+import { AuthService } from '@core/services/auth.service';
+
+@Injectable()
+export class AuthEffects {
+  login$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(AuthActions.login),
+      switchMap(({ username, password }) =>
+        this.authService.login(username, password).pipe(
+          map(response => {
+            localStorage.setItem('token', response.token);
+            return AuthActions.loginSuccess({
+              user: response.user,
+              token: response.token
+            });
+          }),
+          catchError(error =>
+            of(AuthActions.loginFailure({ error: error.message }))
+          )
+        )
+      )
+    )
+  );
+
+  loginSuccess$ = createEffect(
+    () =>
+      this.actions$.pipe(
+        ofType(AuthActions.loginSuccess),
+        tap(() => this.router.navigate(['/dashboard']))
+      ),
+    { dispatch: false }
+  );
+
+  logout$ = createEffect(
+    () =>
+      this.actions$.pipe(
+        ofType(AuthActions.logout),
+        tap(() => {
+          localStorage.removeItem('token');
+          this.router.navigate(['/login']);
+        })
+      ),
+    { dispatch: false }
+  );
+
+  constructor(
+    private actions$: Actions,
+    private authService: AuthService,
+    private router: Router
+  ) {}
+}
+```
+
+**3.3 HTTP Interceptors**
+
+```typescript
+// src/app/core/interceptors/auth.interceptor.ts
+import { Injectable } from '@angular/core';
+import {
+  HttpRequest,
+  HttpHandler,
+  HttpEvent,
+  HttpInterceptor,
+} from '@angular/common/http';
+import { Observable } from 'rxjs';
+
+@Injectable()
+export class AuthInterceptor implements HttpInterceptor {
+  intercept(
+    request: HttpRequest<unknown>,
+    next: HttpHandler
+  ): Observable<HttpEvent<unknown>> {
+    const token = localStorage.getItem('token');
+
+    if (token) {
+      request = request.clone({
+        setHeaders: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+    }
+
+    return next.handle(request);
+  }
+}
+```
+
+```typescript
+// src/app/core/interceptors/error.interceptor.ts
+import { Injectable } from '@angular/core';
+import {
+  HttpRequest,
+  HttpHandler,
+  HttpEvent,
+  HttpInterceptor,
+  HttpErrorResponse,
+} from '@angular/common/http';
+import { Observable, throwError } from 'rxjs';
+import { catchError } from 'rxjs/operators';
+import { Router } from '@angular/router';
+import { NGXLogger } from 'ngx-logger';
+
+@Injectable()
+export class ErrorInterceptor implements HttpInterceptor {
+  constructor(
+    private router: Router,
+    private logger: NGXLogger
+  ) {}
+
+  intercept(
+    request: HttpRequest<unknown>,
+    next: HttpHandler
+  ): Observable<HttpEvent<unknown>> {
+    return next.handle(request).pipe(
+      catchError((error: HttpErrorResponse) => {
+        if (error.status === 401) {
+          localStorage.removeItem('token');
+          this.router.navigate(['/login']);
     }
     return Promise.reject(error);
   }
@@ -1255,13 +1616,16 @@ export const Navigation: React.FC = () => {
 
 ### Deliverables - Phase 2
 
-✅ React 18 application with TypeScript
-✅ Material-UI theme matching existing design
-✅ Redux Toolkit state management
-✅ Routing with React Router
-✅ HTTP client with authentication
-✅ Reusable component library
+✅ Angular 17+ application with TypeScript
+✅ Angular Material theme matching Ashley Direct branding
+✅ NgRx state management (Store + Effects)
+✅ Angular Router with lazy loading
+✅ HTTP client with interceptors (auth, error, logging)
+✅ Reusable component library (shared module)
 ✅ Layout and navigation components
+✅ Reactive forms with validation
+✅ ngx-logger configured for frontend logging
+✅ Application Insights integration
 ✅ Authentication flow (login/logout)
 
 ---
@@ -1986,7 +2350,7 @@ If critical issues occur:
 | Role | Count | Allocation |
 |------|-------|------------|
 | **Backend Developer (.NET Core)** | 2 | Full-time |
-| **Frontend Developer (React)** | 2 | Full-time |
+| **Frontend Developer (Angular)** | 2 | Full-time |
 | **Full-Stack Developer** | 1 | Full-time |
 | **QA Engineer** | 2 | Full-time |
 | **DevOps Engineer** | 1 | Part-time (50%) |
@@ -2053,7 +2417,7 @@ Month 10:    Phase 8-9 (Deployment & Stabilization)
 5. ✅ **AnalystReport.aspx** - E-Payment Report page
 6. ✅ **History.aspx** - E-Payment History page
 
-**CRITICAL REQUIREMENT:** All UI designs and styles must be preserved exactly as shown in the screenshots during migration to React. See detailed UI preservation strategy in Appendix E.
+**CRITICAL REQUIREMENT:** All UI designs and styles must be preserved exactly as shown in the screenshots during migration to Angular. See detailed UI preservation strategy in Appendix E.
 
 ---
 
@@ -2095,7 +2459,7 @@ All configuration will be externalized:
 
 ### E. UI Design Preservation Strategy
 
-**CRITICAL REQUIREMENT:** The migrated React application must preserve the exact look, feel, and behavior of the existing ASP.NET Web Forms application.
+**CRITICAL REQUIREMENT:** The migrated Angular application must preserve the exact look, feel, and behavior of the existing ASP.NET Web Forms application.
 
 #### **Global Design System**
 
@@ -2187,41 +2551,61 @@ All pages must use consistent:
 - Dropdown menus with "All" default option where applicable
 - Export to Excel buttons with Excel icon
 
-#### **Material-UI Theme Customization**
+#### **Angular Material Theme Customization**
 
-The React application will use Material-UI (MUI) customized to match Ashley Direct branding:
+The Angular application will use Angular Material customized to match Ashley Direct branding:
 
-```typescript
-const ashleyTheme = createTheme({
-  palette: {
-    primary: { main: '#FF6600' },  // Ashley Orange
-    secondary: { main: '#CCCCCC' }, // Gray
-    background: { default: '#FFFFFF', paper: '#F5F5F5' },
-  },
-  typography: {
-    fontFamily: 'Arial, Helvetica, sans-serif',
-    h1: { fontSize: '24px', fontWeight: 'bold' },
-    h2: { fontSize: '18px', fontWeight: 'bold' },
-    body1: { fontSize: '13px' },
-    body2: { fontSize: '12px' },
-  },
-  components: {
-    MuiButton: {
-      styleOverrides: {
-        root: { textTransform: 'none', borderRadius: '4px' },
-        containedPrimary: { backgroundColor: '#FF6600', '&:hover': { backgroundColor: '#E55A00' } },
-      },
-    },
-    MuiTab: {
-      styleOverrides: {
-        root: { '&.Mui-selected': { borderBottom: '3px solid #FF6600', color: '#FF6600' } },
-      },
-    },
-  },
-});
+```scss
+// src/styles/ashley-theme.scss
+@use '@angular/material' as mat;
+
+@include mat.core();
+
+// Ashley Direct color palettes
+$ashley-orange-palette: (
+  500: #ff6600,  // Primary Ashley Orange
+  contrast: (500: white)
+);
+
+$ashley-gray-palette: (
+  400: #cccccc,  // Gray
+  contrast: (400: rgba(black, 0.87))
+);
+
+$ashley-primary: mat.define-palette($ashley-orange-palette, 500);
+$ashley-accent: mat.define-palette($ashley-gray-palette, 400);
+
+$ashley-theme: mat.define-light-theme((
+  color: (
+    primary: $ashley-primary,
+    accent: $ashley-accent,
+  ),
+  typography: mat.define-typography-config(
+    $font-family: 'Arial, Helvetica, sans-serif',
+    $headline-1: mat.define-typography-level(24px, 32px, 700),
+    $headline-2: mat.define-typography-level(18px, 24px, 700),
+    $body-1: mat.define-typography-level(13px, 20px, 400),
+    $body-2: mat.define-typography-level(12px, 18px, 400),
+  ),
+));
+
+@include mat.all-component-themes($ashley-theme);
+
+// Custom component overrides
+.mat-mdc-raised-button.mat-primary {
+  background-color: #ff6600 !important;
+  &:hover { background-color: #e55a00 !important; }
+}
+
+.mat-mdc-tab.mdc-tab--active {
+  .mdc-tab-indicator__content--underline {
+    border-color: #ff6600;
+    border-width: 3px;
+  }
+}
 ```
 
-**See Phase 2 (Frontend Foundation) for detailed React component implementations.**
+**See Phase 2 (Frontend Foundation) for detailed Angular component implementations.**
 
 ---
 
@@ -2975,65 +3359,70 @@ public class USBankGatewayService : IPaymentGatewayService
 
 ---
 
-#### **2. Frontend Logging (React/TypeScript)**
+#### **2. Frontend Logging (Angular/TypeScript)**
 
 **2.1 Install Logging Packages**
 
 ```bash
-npm install winston
+npm install ngx-logger
 npm install @microsoft/applicationinsights-web
-npm install @sentry/react @sentry/tracing
 ```
 
-**2.2 Configure Winston Logger**
+**2.2 Configure ngx-logger**
 
 ```typescript
-// src/utils/logger.ts
-import winston from 'winston';
-import { ApplicationInsights } from '@microsoft/applicationinsights-web';
+// src/app/app.module.ts
+import { LoggerModule, NgxLoggerLevel } from 'ngx-logger';
+import { environment } from '../environments/environment';
 
-// Initialize Application Insights
-const appInsights = new ApplicationInsights({
-  config: {
-    instrumentationKey: process.env.REACT_APP_APPINSIGHTS_KEY,
-    enableAutoRouteTracking: true,
-    enableCorsCorrelation: true,
-    enableRequestHeaderTracking: true,
-    enableResponseHeaderTracking: true,
-  }
-});
-appInsights.loadAppInsights();
-
-// Create Winston logger
-const logger = winston.createLogger({
-  level: process.env.NODE_ENV === 'production' ? 'info' : 'debug',
-  format: winston.format.combine(
-    winston.format.timestamp(),
-    winston.format.errors({ stack: true }),
-    winston.format.json()
-  ),
-  defaultMeta: {
-    service: 'epay-frontend',
-    environment: process.env.NODE_ENV,
-  },
-  transports: [
-    new winston.transports.Console({
-      format: winston.format.combine(
-        winston.format.colorize(),
-        winston.format.simple()
-      ),
+@NgModule({
+  imports: [
+    LoggerModule.forRoot({
+      level: environment.production ? NgxLoggerLevel.INFO : NgxLoggerLevel.DEBUG,
+      serverLogLevel: NgxLoggerLevel.ERROR,
+      disableConsoleLogging: false,
+      enableSourceMaps: !environment.production,
     }),
   ],
-});
+})
+export class AppModule {}
+```
 
-// Wrapper to send logs to Application Insights
-export const log = {
-  debug: (message: string, meta?: any) => {
-    logger.debug(message, meta);
-  },
+**2.3 Create Logger Service with Application Insights**
 
-  info: (message: string, meta?: any) => {
-    logger.info(message, meta);
+```typescript
+// src/app/core/services/logger.service.ts
+import { Injectable } from '@angular/core';
+import { NGXLogger } from 'ngx-logger';
+import { ApplicationInsights } from '@microsoft/applicationinsights-web';
+import { environment } from '@environments/environment';
+
+@Injectable({
+  providedIn: 'root'
+})
+export class LoggerService {
+  private appInsights: ApplicationInsights;
+
+  constructor(private logger: NGXLogger) {
+    // Initialize Application Insights
+    this.appInsights = new ApplicationInsights({
+      config: {
+        instrumentationKey: environment.appInsightsKey,
+        enableAutoRouteTracking: true,
+        enableCorsCorrelation: true,
+        enableRequestHeaderTracking: true,
+        enableResponseHeaderTracking: true,
+      }
+    });
+    this.appInsights.loadAppInsights();
+  }
+
+  debug(message: string, meta?: any): void {
+    this.logger.debug(message, meta);
+  }
+
+  info(message: string, meta?: any): void {
+    this.logger.info(message, meta);
     appInsights.trackTrace({ message, severityLevel: 1, properties: meta });
   },
 
@@ -3919,6 +4308,7 @@ dependencies
 | 1.0 | 2026-01-20 | Migration Team | Initial version |
 | 1.1 | 2026-01-20 | Migration Team | Added comprehensive structured logging strategy (Phase 10) |
 | 1.2 | 2026-01-22 | Migration Team | Added UI Design Preservation Strategy (Appendix E) based on provided screenshots |
+| 1.3 | 2026-01-22 | Migration Team | Updated frontend framework from React to Angular 17+ with NgRx, Angular Material, and Angular HttpClient |
 
 ---
 
