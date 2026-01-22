@@ -1,0 +1,98 @@
+// Ashley Direct Branding Colors
+$ashley-orange: #FF6600;
+$ashley-peach: #F5DEB3;
+$white: #FFFFFF;
+$light-gray: #F5F5F5;
+$dark-gray: #333333;
+
+.invoice-search-container {
+  width: 775px;
+  margin: 0 auto;
+  padding: 20px;
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+.page-title {
+  text-align: center;
+  font-size: 24px;
+  font-weight: bold;
+  color: $dark-gray;
+  margin-bottom: 20px;
+}
+
+.error-message {
+  background-color: #ffebee;
+  color: #c62828;
+  padding: 12px;
+  border-radius: 4px;
+  margin-bottom: 16px;
+  font-size: 14px;
+}
+
+.invoice-grid-container {
+  background-color: $white;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  margin-top: 20px;
+}
+
+.grid-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 16px;
+  background-color: $light-gray;
+  border-bottom: 2px solid $ashley-orange;
+  font-size: 14px;
+
+  .grid-header-left {
+    font-weight: bold;
+    color: $dark-gray;
+
+    .date-label {
+      color: $ashley-orange;
+      font-weight: bold;
+    }
+  }
+
+  .grid-header-right {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+
+    button {
+      font-family: Arial, Helvetica, sans-serif;
+    }
+
+    mat-checkbox {
+      font-size: 14px;
+    }
+  }
+}
+
+// Override Angular Material button colors
+::ng-deep {
+  .mat-mdc-raised-button.mat-primary {
+    background-color: $ashley-orange !important;
+    color: $white !important;
+
+    &:hover {
+      background-color: darken($ashley-orange, 10%) !important;
+    }
+
+    &:disabled {
+      background-color: #cccccc !important;
+      color: #666666 !important;
+    }
+  }
+
+  .mat-mdc-checkbox.mat-accent .mdc-checkbox__background {
+    border-color: $ashley-orange !important;
+  }
+
+  .mat-mdc-checkbox.mat-accent.mat-mdc-checkbox-checked .mdc-checkbox__background {
+    background-color: $ashley-orange !important;
+    border-color: $ashley-orange !important;
+  }
+}
+
