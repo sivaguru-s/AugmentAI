@@ -2043,17 +2043,17 @@ Month 10:    Phase 8-9 (Deployment & Stabilization)
 5. **Review US Bank Integration** - Document exact flow
 6. **Review DB2 Queries** - Document all DB2 stored procedures
 
-### Awaiting from User
+### ✅ UI Screenshots Received and Documented
 
-📸 **UI Screenshots Required** - Please provide screenshots of:
-- main.aspx (Invoice search page)
-- Confirmation.aspx (Payment confirmation)
-- History.aspx (Payment history)
-- AnalystReport.aspx (Reporting page)
-- AdminMaintenance.aspx (Admin page)
-- UserList.aspx (User management)
+📸 **UI Screenshots Provided** - The following screenshots have been received and analyzed:
+1. ✅ **main.aspx** - E-Payment Invoice Search page
+2. ✅ **Confirmation.aspx** - Payment Confirmation page
+3. ✅ **UserList.aspx** - E-Payment User List page
+4. ✅ **AdminMaintenance.aspx** - E-Payment Admin Maintenance page
+5. ✅ **AnalystReport.aspx** - E-Payment Report page
+6. ✅ **History.aspx** - E-Payment History page
 
-These screenshots will be used to ensure pixel-perfect design preservation in the React migration.
+**CRITICAL REQUIREMENT:** All UI designs and styles must be preserved exactly as shown in the screenshots during migration to React. See detailed UI preservation strategy in Appendix E.
 
 ---
 
@@ -2092,6 +2092,136 @@ All configuration will be externalized:
 - **Serilog** - Structured logging
 - **Azure Monitor** - Infrastructure monitoring
 - **PagerDuty** - Alerting
+
+### E. UI Design Preservation Strategy
+
+**CRITICAL REQUIREMENT:** The migrated React application must preserve the exact look, feel, and behavior of the existing ASP.NET Web Forms application.
+
+#### **Global Design System**
+
+**Ashley Direct Branding:**
+- Logo: Ashley Direct logo (orange triangle + "ASHLEY|DIRECT" text)
+- Header: White background with user info (top right)
+- Account Info Bar: Peach/tan background (#F5DEB3) with account details
+- Footer: Three-column layout (Get To Know Us | Customer Care | Get Inspired)
+
+**Color Palette:**
+```css
+Primary Colors:
+- Ashley Orange: #FF6600 (buttons, accents, active tabs)
+- Peach/Tan Bar: #F5DEB3 (account info bar)
+- White: #FFFFFF (background)
+- Light Gray: #F5F5F5 (table alternating rows)
+- Dark Gray: #333333 (text)
+
+Button Colors:
+- Primary (Search, OK, Make Payment): #FF6600 (orange)
+- Secondary (Cancel, Reset, Export): #CCCCCC (gray)
+
+Table Colors:
+- Header: #E0E0E0 (light gray)
+- Row Hover: #F0F0F0 (very light gray)
+- Selected Row: #FFE5CC (light orange)
+- Border: #CCCCCC (gray)
+```
+
+**Typography:**
+```css
+Font Family: Arial, Helvetica, sans-serif
+
+Font Sizes:
+- Page Title (h1): 24px, bold
+- Section Title (h2): 18px, bold
+- Navigation Links: 14px
+- Body Text: 13px
+- Table Headers: 13px, bold
+- Table Data: 12px
+- Footer Links: 11px
+```
+
+#### **Page-Specific Requirements**
+
+**1. E-Payment Invoice Search (main.aspx)**
+- Navigation tabs with orange underline for active tab
+- Search section with inline fields (Invoice #, Credit #, PO #, Invoice Date range)
+- Results grid with sortable columns, checkbox selection, alternating row colors
+- Action buttons: "Make Payment" (orange), "Show All Invoices" (checkbox), "Export to Excel"
+- Grid columns: Status, Invoice #, Credit #, ShipTo, Inv Date, Order #, Trip #, BPP #, PO #, Inv Amt, Amt Pd, Balance, Code, Days
+
+**2. Payment Confirmation (Confirmation.aspx)**
+- Help section with light yellow background (#FFFACD)
+- Invoice summary table with totals footer
+- Action buttons: "OK" (orange), "Cancel" (gray)
+- Print notice with printer icon
+
+**3. User List (UserList.aspx)**
+- Search form with Territory, Bill To State, Terms Code dropdowns
+- "Reset" and "Search" buttons (orange)
+- Results grid with "Export to Excel" button
+- "Previous Week" link in results header
+
+**4. Admin Maintenance (AdminMaintenance.aspx)**
+- Search criteria with Territory dropdown and radio buttons (All Customers / Selected Customer)
+- Results grid with "Delete" and "Export to Excel" buttons
+- Unconfirmed payments display
+
+**5. Analyst Report (AnalystReport.aspx)**
+- Search criteria: Territory dropdown, Customer # text input, Inv Date range
+- Report results section (empty state shown when no data)
+
+**6. Payment History (History.aspx)**
+- Search form: Invoice #, Check #, As of date picker
+- "Search" and "Export to Excel" buttons (orange)
+- History grid with columns: Date Added, Check #, Status, Ref #, File, Gross, Discount, Net
+
+#### **Common UI Components**
+
+All pages must use consistent:
+- Navigation tabs (E-Pay Home | User List | Admin Maintenance | Analyst Report | History | Help)
+- Page header with Ashley Direct logo and user info
+- Account info bar (peach/tan background)
+- Footer with three-column layout
+- Data grids with sortable columns, alternating row colors, hover effects
+- Orange primary buttons, gray secondary buttons
+- Date pickers with calendar icon
+- Dropdown menus with "All" default option where applicable
+- Export to Excel buttons with Excel icon
+
+#### **Material-UI Theme Customization**
+
+The React application will use Material-UI (MUI) customized to match Ashley Direct branding:
+
+```typescript
+const ashleyTheme = createTheme({
+  palette: {
+    primary: { main: '#FF6600' },  // Ashley Orange
+    secondary: { main: '#CCCCCC' }, // Gray
+    background: { default: '#FFFFFF', paper: '#F5F5F5' },
+  },
+  typography: {
+    fontFamily: 'Arial, Helvetica, sans-serif',
+    h1: { fontSize: '24px', fontWeight: 'bold' },
+    h2: { fontSize: '18px', fontWeight: 'bold' },
+    body1: { fontSize: '13px' },
+    body2: { fontSize: '12px' },
+  },
+  components: {
+    MuiButton: {
+      styleOverrides: {
+        root: { textTransform: 'none', borderRadius: '4px' },
+        containedPrimary: { backgroundColor: '#FF6600', '&:hover': { backgroundColor: '#E55A00' } },
+      },
+    },
+    MuiTab: {
+      styleOverrides: {
+        root: { '&.Mui-selected': { borderBottom: '3px solid #FF6600', color: '#FF6600' } },
+      },
+    },
+  },
+});
+```
+
+**See Phase 2 (Frontend Foundation) for detailed React component implementations.**
 
 ---
 
@@ -3788,6 +3918,7 @@ dependencies
 |---------|------|--------|---------|
 | 1.0 | 2026-01-20 | Migration Team | Initial version |
 | 1.1 | 2026-01-20 | Migration Team | Added comprehensive structured logging strategy (Phase 10) |
+| 1.2 | 2026-01-22 | Migration Team | Added UI Design Preservation Strategy (Appendix E) based on provided screenshots |
 
 ---
 
