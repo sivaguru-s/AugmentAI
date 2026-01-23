@@ -1,7 +1,7 @@
-using EPay.Backend.Models.DTOs;
+using EPay.Api.Models.DTOs;
 using System.Data;
 
-namespace EPay.Backend.Repositories
+namespace EPay.Api.Repositories
 {
     /// <summary>
     /// Repository interface for invoice data access

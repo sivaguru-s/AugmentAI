@@ -1,9 +1,9 @@
-using EPay.Backend.Models.DTOs;
+using EPay.Api.Models.DTOs;
 using Microsoft.Data.SqlClient;
 using Microsoft.Extensions.Configuration;
 using System.Data;
 
-namespace EPay.Backend.Repositories
+namespace EPay.Api.Repositories
 {
     /// <summary>
     /// Repository implementation for invoice data access

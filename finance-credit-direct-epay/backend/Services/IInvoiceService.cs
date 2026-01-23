@@ -1,6 +1,6 @@
-using EPay.Backend.Models.DTOs;
+using EPay.Api.Models.DTOs;
 
-namespace EPay.Backend.Services
+namespace EPay.Api.Services
 {
     /// <summary>
     /// Service interface for invoice business logic

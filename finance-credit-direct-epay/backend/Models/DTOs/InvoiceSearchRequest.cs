@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace EPay.Backend.Models.DTOs
+namespace EPay.Api.Models.DTOs
 {
     /// <summary>
     /// Request DTO for invoice search operations
