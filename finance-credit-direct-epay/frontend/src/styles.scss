@@ -1,0 +1,55 @@
+/* Ashley Direct Branding Colors */
+:root {
+  --ashley-orange: #FF6600;
+  --ashley-peach: #F5DEB3;
+  --ashley-white: #FFFFFF;
+  --ashley-light-gray: #F5F5F5;
+  --ashley-dark-gray: #333333;
+  --ashley-border-gray: #CCCCCC;
+}
+
+/* Global Styles */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: 14px;
+  color: var(--ashley-dark-gray);
+  background-color: var(--ashley-white);
+}
+
+/* Material Theme Customization */
+@import '@angular/material/prebuilt-themes/indigo-pink.css';
+
+/* Override Material colors with Ashley branding */
+.mat-mdc-raised-button.mat-primary {
+  background-color: var(--ashley-orange) !important;
+  color: var(--ashley-white) !important;
+}
+
+.mat-mdc-tab-group .mat-mdc-tab.mat-mdc-tab-active {
+  border-bottom: 3px solid var(--ashley-orange);
+}
+
+/* Utility Classes */
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+.text-center {
+  text-align: center;
+}
+
+.mt-1 { margin-top: 8px; }
+.mt-2 { margin-top: 16px; }
+.mt-3 { margin-top: 24px; }
+.mb-1 { margin-bottom: 8px; }
+.mb-2 { margin-bottom: 16px; }
+.mb-3 { margin-bottom: 24px; }
+
