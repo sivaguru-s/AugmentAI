@@ -1,0 +1,32 @@
+$ashley-orange: #FF6600;
+$white: #FFFFFF;
+$dark-gray: #333333;
+
+.epay-nav {
+  display: flex;
+  gap: 0;
+  border-bottom: 2px solid #ddd;
+  margin-bottom: 20px;
+  background-color: $white;
+}
+
+.nav-link {
+  padding: 12px 24px;
+  font-size: 14px;
+  font-weight: bold;
+  color: $dark-gray;
+  text-decoration: none;
+  border-bottom: 3px solid transparent;
+  transition: all 0.2s ease;
+  font-family: Arial, Helvetica, sans-serif;
+
+  &:hover {
+    background-color: #f5f5f5;
+  }
+
+  &.active {
+    color: $ashley-orange;
+    border-bottom-color: $ashley-orange;
+  }
+}
+
