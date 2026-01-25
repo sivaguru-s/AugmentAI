@@ -1,4 +1,4 @@
-namespace EPay.Backend.Models.DTOs
+namespace EPay.Api.Models.DTOs
 {
     /// <summary>
     /// Generic paged result wrapper

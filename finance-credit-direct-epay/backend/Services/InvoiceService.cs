@@ -1,8 +1,8 @@
-using EPay.Backend.Models.DTOs;
-using EPay.Backend.Repositories;
+using EPay.Api.Models.DTOs;
+using EPay.Api.Repositories;
 using System.Data;
 
-namespace EPay.Backend.Services
+namespace EPay.Api.Services
 {
     /// <summary>
     /// Service implementation for invoice business logic

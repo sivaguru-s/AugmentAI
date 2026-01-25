@@ -1,10 +1,10 @@
-using EPay.Backend.Models.DTOs;
-using EPay.Backend.Services;
+using EPay.Api.Models.DTOs;
+using EPay.Api.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 
-namespace EPay.Backend.Controllers
+namespace EPay.Api.Controllers
 {
     /// <summary>
     /// API controller for invoice operations
