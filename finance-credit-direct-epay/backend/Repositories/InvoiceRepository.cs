@@ -63,11 +63,14 @@ namespace EPay.Api.Repositories
 
                 _logger.LogInformation(
                     "SearchInvoicesAsync - Customer: {CustomerNumber}, FromDate: {FromDate}, ToDate: {ToDate}, " +
-                    "SortColumn: {SortColumn} (validated: {ValidatedSortColumn}), PageNum: {PageNum}, PageSize: {PageSize}",
+                    "SortColumn: {SortColumn} (validated: {ValidatedSortColumn}), PageNum: {PageNum}, PageSize: {PageSize}, " +
+                    "SecurityMHS: {SecurityMHS}, AllShipTos: {AllShipTos}",
                     request.CustomerNumber, request.FromDate, request.ToDate,
-                    request.SortColumn, sortColumn, request.PageNumber, request.PageSize);
+                    request.SortColumn, sortColumn, request.PageNumber, request.PageSize,
+                    request.SecurityMHS, request.AllShipTos);
 
                 // Add parameters matching the stored procedure signature
+                // Note: Parameters match the VB.NET Common.LoadInvoices() method
                 command.Parameters.AddWithValue("@customerNumber", request.CustomerNumber ?? string.Empty);
                 command.Parameters.AddWithValue("@shiptoNumber", request.ShipToNumber ?? string.Empty);
                 command.Parameters.AddWithValue("@allShiptos", request.AllShipTos);

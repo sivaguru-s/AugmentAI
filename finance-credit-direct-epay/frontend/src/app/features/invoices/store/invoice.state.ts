@@ -38,15 +38,19 @@ export interface InvoiceState {
 
 /**
  * Initial state
- * Note: customerNumber is set to a default value for development.
- * In production, this should come from authentication/session.
+ * Note: customerNumber and securityMHS are set to default values for development.
+ * In production, these should come from authentication/session.
+ *
+ * IMPORTANT: The stored procedure requires a valid securityMHS value that exists
+ * in Ashley.dbo.tblSecurityCustomer for the given customer number.
+ * Common values: 'MASTERXX' (for testing), or the actual MHS code for the customer.
  */
 export const initialInvoiceState: InvoiceState = {
   searchCriteria: {
     customerNumber: '4031300', // Default customer number for development - change as needed
     shipToNumber: '',
-    allShipTos: false,
-    securityMHS: '',
+    allShipTos: true,  // Set to true to search all ship-tos
+    securityMHS: 'MASTERXX', // Default security MHS for development - REQUIRED for stored procedure
     invoiceNumber: null,
     creditNumber: null,
     poNumber: null,
