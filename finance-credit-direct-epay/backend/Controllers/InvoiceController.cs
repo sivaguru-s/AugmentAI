@@ -41,54 +41,30 @@ namespace EPay.Api.Controllers
         {
             try
             {
-                // Get user context from claims (when authentication is enabled)
-                var customerNumber = User.FindFirst("CustomerNumber")?.Value;
-                var shipToNumber = User.FindFirst("ShipToNumber")?.Value;
-                var allShipTos = bool.Parse(User.FindFirst("AllShipTos")?.Value ?? "false");
-                var securityMHS = User.FindFirst("SecurityMHS")?.Value;
-
-                // If no customer number from claims, use the one from request body
-                // This allows the API to work when authentication is disabled for development
-                if (string.IsNullOrEmpty(customerNumber))
+                // For development: Use customer number from request body directly
+                // TODO: When authentication is enabled, get customer number from user claims
+                if (string.IsNullOrEmpty(request.CustomerNumber))
                 {
-                    customerNumber = request.CustomerNumber;
-                }
-
-                // If still no customer number, return error
-                if (string.IsNullOrEmpty(customerNumber))
-                {
-                    _logger.LogWarning("No customer number found in user claims or request");
+                    _logger.LogWarning("No customer number provided in request");
                     return BadRequest(new { error = "No account selected. Please provide a customer number." });
                 }
 
-                // Set request values (from claims if available, otherwise keep request values)
-                request.CustomerNumber = customerNumber;
-                if (!string.IsNullOrEmpty(shipToNumber))
-                {
-                    request.ShipToNumber = shipToNumber;
-                }
-                if (allShipTos)
-                {
-                    request.AllShipTos = allShipTos;
-                }
-                if (!string.IsNullOrEmpty(securityMHS))
-                {
-                    request.SecurityMHS = securityMHS;
-                }
-
-                _logger.LogInformation("Searching invoices for customer {CustomerNumber}", customerNumber);
+                _logger.LogInformation("Searching invoices for customer {CustomerNumber}, FromDate: {FromDate}, ToDate: {ToDate}",
+                    request.CustomerNumber, request.FromDate, request.ToDate);
 
                 var response = await _invoiceService.SearchInvoicesAsync(request);
 
-                // Check if user has EPAYANLYST role
-                response.IsAnalyst = User.IsInRole("EPAYANLYST");
+                // For development: Set IsAnalyst to true to show all features
+                response.IsAnalyst = true;
+
+                _logger.LogInformation("Found {Count} invoices", response.Result?.Items?.Count ?? 0);
 
                 return Ok(response);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error searching invoices");
-                return StatusCode(500, new { error = "An error occurred while searching invoices" });
+                _logger.LogError(ex, "Error searching invoices: {Message}", ex.Message);
+                return StatusCode(500, new { error = $"An error occurred while searching invoices: {ex.Message}" });
             }
         }
 
@@ -133,50 +109,23 @@ namespace EPay.Api.Controllers
         {
             try
             {
-                // Get user context from claims (when authentication is enabled)
-                var customerNumber = User.FindFirst("CustomerNumber")?.Value;
-                var shipToNumber = User.FindFirst("ShipToNumber")?.Value;
-                var allShipTos = bool.Parse(User.FindFirst("AllShipTos")?.Value ?? "false");
-                var securityMHS = User.FindFirst("SecurityMHS")?.Value;
-
-                // If no customer number from claims, use the one from request body
-                if (string.IsNullOrEmpty(customerNumber))
-                {
-                    customerNumber = request.CustomerNumber;
-                }
-
-                // If still no customer number, return error
-                if (string.IsNullOrEmpty(customerNumber))
+                // For development: Use customer number from request body directly
+                if (string.IsNullOrEmpty(request.CustomerNumber))
                 {
                     return BadRequest(new { error = "No account selected. Please provide a customer number." });
                 }
 
-                // Set request values (from claims if available, otherwise keep request values)
-                request.CustomerNumber = customerNumber;
-                if (!string.IsNullOrEmpty(shipToNumber))
-                {
-                    request.ShipToNumber = shipToNumber;
-                }
-                if (allShipTos)
-                {
-                    request.AllShipTos = allShipTos;
-                }
-                if (!string.IsNullOrEmpty(securityMHS))
-                {
-                    request.SecurityMHS = securityMHS;
-                }
-
-                _logger.LogInformation("Exporting invoices to Excel for customer {CustomerNumber}", customerNumber);
+                _logger.LogInformation("Exporting invoices to Excel for customer {CustomerNumber}", request.CustomerNumber);
 
                 var excelData = await _invoiceService.ExportToExcelAsync(request);
 
-                return File(excelData, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", 
+                return File(excelData, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
                     "EpaymentCustomerInvoices.xlsx");
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error exporting invoices to Excel");
-                return StatusCode(500, new { error = "An error occurred while exporting invoices" });
+                _logger.LogError(ex, "Error exporting invoices to Excel: {Message}", ex.Message);
+                return StatusCode(500, new { error = $"An error occurred while exporting invoices: {ex.Message}" });
             }
         }
     }

@@ -29,11 +29,17 @@ export class InvoiceEffects {
           ...action.request
         };
 
+        console.log('Sending search request:', request);
         return this.invoiceService.searchInvoices(request).pipe(
-          map(response => InvoiceActions.searchInvoicesSuccess({ response })),
-          catchError(error => of(InvoiceActions.searchInvoicesFailure({ 
-            error: error.message || 'Failed to search invoices' 
-          })))
+          map(response => {
+            console.log('Search response:', response);
+            return InvoiceActions.searchInvoicesSuccess({ response });
+          }),
+          catchError(error => {
+            console.error('Search error:', error);
+            const errorMessage = error.error?.error || error.message || `HTTP ${error.status}: ${error.statusText}`;
+            return of(InvoiceActions.searchInvoicesFailure({ error: errorMessage }));
+          })
         );
       })
     )

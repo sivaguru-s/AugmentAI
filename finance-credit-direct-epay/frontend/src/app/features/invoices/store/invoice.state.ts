@@ -43,7 +43,7 @@ export interface InvoiceState {
  */
 export const initialInvoiceState: InvoiceState = {
   searchCriteria: {
-    customerNumber: '100000', // Default customer number for development - change as needed
+    customerNumber: '4031300', // Default customer number for development - change as needed
     shipToNumber: '',
     allShipTos: false,
     securityMHS: '',
