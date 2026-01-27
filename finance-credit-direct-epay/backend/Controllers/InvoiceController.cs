@@ -11,7 +11,7 @@ namespace EPay.Api.Controllers
     /// </summary>
     [ApiController]
     [Route("api/[controller]")]
-    [Authorize] // Requires JWT authentication
+    // [Authorize] // TODO: Enable authentication when ready - Commented out for development
     public class InvoiceController : ControllerBase
     {
         private readonly IInvoiceService _invoiceService;
