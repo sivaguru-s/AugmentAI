@@ -13,9 +13,27 @@ namespace EPay.Api.Repositories
         private readonly string _connectionString;
         private readonly ILogger<InvoiceRepository> _logger;
 
+        // Valid sort column names that match database columns
+        private static readonly HashSet<string> ValidSortColumns = new(StringComparer.OrdinalIgnoreCase)
+        {
+            "opidagedt",    // Invoice Date
+            "opiinvno",     // Invoice Number
+            "opicrmnr",     // Credit Number
+            "opishpno",     // Ship To Number
+            "opiordno",     // Order Number
+            "inhTripNo",    // Trip Number
+            "[RPP #]",      // RPP Number
+            "opiponum",     // PO Number
+            "opiInvam",     // Invoice Amount
+            "opiTtlcr",     // Amount Paid
+            "opiOpamt",     // Balance
+            "opicatcd",     // Category Code
+            "[Days]"        // Days
+        };
+
         public InvoiceRepository(IConfiguration configuration, ILogger<InvoiceRepository> logger)
         {
-            _connectionString = configuration.GetConnectionString("AFI_Batch") 
+            _connectionString = configuration.GetConnectionString("AFI_Batch")
                 ?? throw new ArgumentNullException(nameof(configuration), "AFI_Batch connection string not found");
             _logger = logger;
         }
@@ -25,8 +43,6 @@ namespace EPay.Api.Repositories
         /// </summary>
         public async Task<DataTable> SearchInvoicesAsync(InvoiceSearchRequest request)
         {
-            _logger.LogInformation("Searching invoices for customer {CustomerNumber}", request.CustomerNumber);
-
             var dataTable = new DataTable();
 
             try
@@ -39,11 +55,20 @@ namespace EPay.Api.Repositories
                 };
 
                 // Determine if consumer PO search should be used
-                bool consumerPOSearch = !string.IsNullOrEmpty(request.PONumber) 
+                bool consumerPOSearch = !string.IsNullOrEmpty(request.PONumber)
                     && await DetermineIfToUseConsumerSearchAsync(request.CustomerNumber);
 
+                // Validate and sanitize sort column - only allow known column names
+                var sortColumn = GetValidSortColumn(request.SortColumn);
+
+                _logger.LogInformation(
+                    "SearchInvoicesAsync - Customer: {CustomerNumber}, FromDate: {FromDate}, ToDate: {ToDate}, " +
+                    "SortColumn: {SortColumn} (validated: {ValidatedSortColumn}), PageNum: {PageNum}, PageSize: {PageSize}",
+                    request.CustomerNumber, request.FromDate, request.ToDate,
+                    request.SortColumn, sortColumn, request.PageNumber, request.PageSize);
+
                 // Add parameters matching the stored procedure signature
-                command.Parameters.AddWithValue("@customerNumber", request.CustomerNumber);
+                command.Parameters.AddWithValue("@customerNumber", request.CustomerNumber ?? string.Empty);
                 command.Parameters.AddWithValue("@shiptoNumber", request.ShipToNumber ?? string.Empty);
                 command.Parameters.AddWithValue("@allShiptos", request.AllShipTos);
                 command.Parameters.AddWithValue("@securityMHS", request.SecurityMHS ?? string.Empty);
@@ -52,7 +77,7 @@ namespace EPay.Api.Repositories
                 command.Parameters.AddWithValue("@searchInvoice", (request.InvoiceNumber ?? string.Empty).Replace("'", string.Empty));
                 command.Parameters.AddWithValue("@searchCredit", (request.CreditNumber ?? string.Empty).Replace("'", string.Empty));
                 command.Parameters.AddWithValue("@searchPo", (request.PONumber ?? string.Empty).Replace("'", "''"));
-                command.Parameters.AddWithValue("@sortBy", request.SortColumn ?? string.Empty);
+                command.Parameters.AddWithValue("@sortBy", sortColumn);
                 command.Parameters.AddWithValue("@sortAscending", request.SortAscending ? " ASC" : " DESC");
                 command.Parameters.AddWithValue("@pageNum", request.ShowAll ? 0 : request.PageNumber);
                 command.Parameters.AddWithValue("@pageSize", request.ShowAll ? 0 : request.PageSize);
@@ -64,15 +89,39 @@ namespace EPay.Api.Repositories
                 using var adapter = new SqlDataAdapter(command);
                 adapter.Fill(dataTable);
 
-                _logger.LogInformation("Found {RowCount} invoices", dataTable.Rows.Count);
+                _logger.LogInformation("Found {RowCount} invoices for customer {CustomerNumber}",
+                    dataTable.Rows.Count, request.CustomerNumber);
 
                 return dataTable;
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error searching invoices for customer {CustomerNumber}", request.CustomerNumber);
+                _logger.LogError(ex, "Error searching invoices for customer {CustomerNumber}: {Message}",
+                    request.CustomerNumber, ex.Message);
                 throw;
             }
+        }
+
+        /// <summary>
+        /// Validates and returns a safe sort column name.
+        /// Returns empty string if the column is invalid (stored procedure will use default sorting).
+        /// </summary>
+        private string GetValidSortColumn(string? sortColumn)
+        {
+            if (string.IsNullOrWhiteSpace(sortColumn))
+            {
+                return string.Empty;
+            }
+
+            // Check if it's a valid column name
+            if (ValidSortColumns.Contains(sortColumn))
+            {
+                return sortColumn;
+            }
+
+            // Log warning for invalid column names
+            _logger.LogWarning("Invalid sort column '{SortColumn}' - using default sorting", sortColumn);
+            return string.Empty;
         }
 
         /// <summary>
