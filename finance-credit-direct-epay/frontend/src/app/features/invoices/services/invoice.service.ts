@@ -8,7 +8,7 @@ import { InvoiceSearchRequest, InvoiceSearchResponse } from '../models/invoice.m
   providedIn: 'root'
 })
 export class InvoiceService {
-  private readonly apiUrl = `${environment.apiUrl}/api/invoice`;
+  private readonly apiUrl = `${environment.apiUrl}/invoice`;
 
   constructor(private http: HttpClient) {}
 

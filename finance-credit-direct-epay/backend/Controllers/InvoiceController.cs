@@ -41,23 +41,40 @@ namespace EPay.Api.Controllers
         {
             try
             {
-                // Get user context from claims
+                // Get user context from claims (when authentication is enabled)
                 var customerNumber = User.FindFirst("CustomerNumber")?.Value;
                 var shipToNumber = User.FindFirst("ShipToNumber")?.Value;
                 var allShipTos = bool.Parse(User.FindFirst("AllShipTos")?.Value ?? "false");
                 var securityMHS = User.FindFirst("SecurityMHS")?.Value;
 
+                // If no customer number from claims, use the one from request body
+                // This allows the API to work when authentication is disabled for development
                 if (string.IsNullOrEmpty(customerNumber))
                 {
-                    _logger.LogWarning("No customer number found in user claims");
-                    return BadRequest(new { error = "No account selected. Please select an account." });
+                    customerNumber = request.CustomerNumber;
                 }
 
-                // Override request with session data
+                // If still no customer number, return error
+                if (string.IsNullOrEmpty(customerNumber))
+                {
+                    _logger.LogWarning("No customer number found in user claims or request");
+                    return BadRequest(new { error = "No account selected. Please provide a customer number." });
+                }
+
+                // Set request values (from claims if available, otherwise keep request values)
                 request.CustomerNumber = customerNumber;
-                request.ShipToNumber = shipToNumber ?? string.Empty;
-                request.AllShipTos = allShipTos;
-                request.SecurityMHS = securityMHS ?? string.Empty;
+                if (!string.IsNullOrEmpty(shipToNumber))
+                {
+                    request.ShipToNumber = shipToNumber;
+                }
+                if (allShipTos)
+                {
+                    request.AllShipTos = allShipTos;
+                }
+                if (!string.IsNullOrEmpty(securityMHS))
+                {
+                    request.SecurityMHS = securityMHS;
+                }
 
                 _logger.LogInformation("Searching invoices for customer {CustomerNumber}", customerNumber);
 
@@ -116,22 +133,38 @@ namespace EPay.Api.Controllers
         {
             try
             {
-                // Get user context from claims
+                // Get user context from claims (when authentication is enabled)
                 var customerNumber = User.FindFirst("CustomerNumber")?.Value;
                 var shipToNumber = User.FindFirst("ShipToNumber")?.Value;
                 var allShipTos = bool.Parse(User.FindFirst("AllShipTos")?.Value ?? "false");
                 var securityMHS = User.FindFirst("SecurityMHS")?.Value;
 
+                // If no customer number from claims, use the one from request body
                 if (string.IsNullOrEmpty(customerNumber))
                 {
-                    return BadRequest(new { error = "No account selected" });
+                    customerNumber = request.CustomerNumber;
                 }
 
-                // Override request with session data
+                // If still no customer number, return error
+                if (string.IsNullOrEmpty(customerNumber))
+                {
+                    return BadRequest(new { error = "No account selected. Please provide a customer number." });
+                }
+
+                // Set request values (from claims if available, otherwise keep request values)
                 request.CustomerNumber = customerNumber;
-                request.ShipToNumber = shipToNumber ?? string.Empty;
-                request.AllShipTos = allShipTos;
-                request.SecurityMHS = securityMHS ?? string.Empty;
+                if (!string.IsNullOrEmpty(shipToNumber))
+                {
+                    request.ShipToNumber = shipToNumber;
+                }
+                if (allShipTos)
+                {
+                    request.AllShipTos = allShipTos;
+                }
+                if (!string.IsNullOrEmpty(securityMHS))
+                {
+                    request.SecurityMHS = securityMHS;
+                }
 
                 _logger.LogInformation("Exporting invoices to Excel for customer {CustomerNumber}", customerNumber);
 

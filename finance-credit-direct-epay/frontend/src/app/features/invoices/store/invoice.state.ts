@@ -6,6 +6,10 @@ import { InvoiceDto, PagedResult } from '../models/invoice.model';
 export interface InvoiceState {
   // Search criteria
   searchCriteria: {
+    customerNumber: string;
+    shipToNumber: string;
+    allShipTos: boolean;
+    securityMHS: string;
     invoiceNumber: string | null;
     creditNumber: string | null;
     poNumber: string | null;
@@ -34,9 +38,15 @@ export interface InvoiceState {
 
 /**
  * Initial state
+ * Note: customerNumber is set to a default value for development.
+ * In production, this should come from authentication/session.
  */
 export const initialInvoiceState: InvoiceState = {
   searchCriteria: {
+    customerNumber: '100000', // Default customer number for development - change as needed
+    shipToNumber: '',
+    allShipTos: false,
+    securityMHS: '',
     invoiceNumber: null,
     creditNumber: null,
     poNumber: null,
