@@ -81,15 +81,15 @@ namespace EPay.Api.Controllers
 
                 return Ok(response);
             }
-            catch (ValidationException ex)
-            {
-                _logger.LogWarning(ex, "Validation error searching invoices: {Message}", ex.Message);
-                return BadRequest(new { error = ex.Message, errorCode = ex.ErrorCode, field = ex.FieldName });
-            }
             catch (InvalidDateRangeException ex)
             {
                 _logger.LogWarning(ex, "Invalid date range: {Message}", ex.Message);
                 return BadRequest(new { error = ex.Message, errorCode = ex.ErrorCode, fromDate = ex.FromDate, toDate = ex.ToDate });
+            }
+            catch (ValidationException ex)
+            {
+                _logger.LogWarning(ex, "Validation error searching invoices: {Message}", ex.Message);
+                return BadRequest(new { error = ex.Message, errorCode = ex.ErrorCode, field = ex.FieldName });
             }
             catch (DataAccessException ex)
             {
