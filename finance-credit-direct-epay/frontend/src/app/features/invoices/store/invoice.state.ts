@@ -37,6 +37,11 @@ export interface InvoiceState {
 }
 
 /**
+ * Default date range in days - 6 months (approximately 180 days)
+ */
+const DEFAULT_DATE_RANGE_DAYS = 180;
+
+/**
  * Initial state
  * Note: customerNumber and securityMHS are set to default values for development.
  * In production, these should come from authentication/session.
@@ -54,7 +59,7 @@ export const initialInvoiceState: InvoiceState = {
     invoiceNumber: null,
     creditNumber: null,
     poNumber: null,
-    fromDate: new Date(new Date().setDate(new Date().getDate() - 90)), // Default 90 days
+    fromDate: new Date(new Date().setDate(new Date().getDate() - DEFAULT_DATE_RANGE_DAYS)), // Default 6 months
     toDate: new Date(),
     sortColumn: null,
     sortAscending: true,

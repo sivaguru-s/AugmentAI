@@ -81,8 +81,29 @@ $light-gray: #F5F5F5;
     padding-bottom: 0;
   }
 
-  .mat-mdc-form-field-subscript-wrapper {
-    display: none;
+  // Show validation errors when field is invalid and touched
+  .mat-mdc-form-field-error {
+    font-size: 11px;
+  }
+}
+
+// Date range validation error message
+.validation-error {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  margin: 0 16px 16px 16px;
+  background-color: #fff3e0;
+  border: 1px solid #ff9800;
+  border-radius: 4px;
+  color: #e65100;
+  font-size: 13px;
+
+  mat-icon {
+    font-size: 18px;
+    height: 18px;
+    width: 18px;
   }
 }
 
