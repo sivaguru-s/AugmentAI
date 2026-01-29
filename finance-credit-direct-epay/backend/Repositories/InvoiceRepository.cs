@@ -117,13 +117,16 @@ namespace EPay.Api.Repositories
 
                 // Add parameters matching the stored procedure signature exactly
                 // Reference: Common.vb LoadInvoices() -> Datawhse.dbo.usp_OrderAndInvoiceReportingOpenInvoices3
-                // Note: Despite the naming, @FromDate = start date (earlier) and @ToDate = end date (later)
+                // IMPORTANT: The stored procedure has REVERSED naming convention:
+                //   @FromDate = END date (later date) - e.g., '2025-07-31'
+                //   @ToDate = START date (earlier date) - e.g., '2025-01-27'
+                // This was confirmed by SSMS testing showing @FromDate='2025-07-31', @ToDate='2025-01-27'
                 command.Parameters.AddWithValue("@customerNumber", request.CustomerNumber ?? string.Empty);
                 command.Parameters.AddWithValue("@shiptoNumber", request.ShipToNumber ?? string.Empty);
                 command.Parameters.AddWithValue("@allShiptos", request.AllShipTos ? 1 : 0);
                 command.Parameters.AddWithValue("@securityMHS", request.SecurityMHS ?? "MASTERXX");
-                command.Parameters.AddWithValue("@FromDate", request.FromDate);  // Start date (earlier date from UI)
-                command.Parameters.AddWithValue("@ToDate", request.ToDate);       // End date (later date from UI)
+                command.Parameters.AddWithValue("@FromDate", request.ToDate);    // SP expects END date (later date from UI)
+                command.Parameters.AddWithValue("@ToDate", request.FromDate);    // SP expects START date (earlier date from UI)
                 command.Parameters.AddWithValue("@searchInvoice", SanitizeInput(request.InvoiceNumber));
                 command.Parameters.AddWithValue("@searchCredit", SanitizeInput(request.CreditNumber));
                 command.Parameters.AddWithValue("@searchPo", SanitizePoNumber(request.PONumber));
