@@ -125,8 +125,8 @@ namespace EPay.Api.Repositories
                 command.Parameters.AddWithValue("@shiptoNumber", request.ShipToNumber ?? string.Empty);
                 command.Parameters.AddWithValue("@allShiptos", request.AllShipTos ? 1 : 0);
                 command.Parameters.AddWithValue("@securityMHS", request.SecurityMHS ?? "MASTERXX");
-                command.Parameters.AddWithValue("@FromDate", request.ToDate);    // SP expects END date (later date from UI)
-                command.Parameters.AddWithValue("@ToDate", request.FromDate);    // SP expects START date (earlier date from UI)
+                command.Parameters.AddWithValue("@FromDate", request.FromDate);    // SP expects END date (later date from UI)
+                command.Parameters.AddWithValue("@ToDate", request.ToDate);    // SP expects START date (earlier date from UI)
                 command.Parameters.AddWithValue("@searchInvoice", SanitizeInput(request.InvoiceNumber));
                 command.Parameters.AddWithValue("@searchCredit", SanitizeInput(request.CreditNumber));
                 command.Parameters.AddWithValue("@searchPo", SanitizePoNumber(request.PONumber));
