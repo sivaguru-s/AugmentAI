@@ -1,0 +1,49 @@
+<div class="site-wrapper" [class.open-primarymenu]="isMenuOpen" #wrapperRef>
+  <!-- Header -->
+  <header class="site-header" #headerRef>
+    <div class="header-container">
+      <div class="header-logo">
+        <a href="/" class="logo-link">
+          <img src="assets/images/ashley-logo.png" alt="Ashley Direct" class="logo-img" 
+               onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+          <span class="logo-text" style="display: none;">Ashley Direct</span>
+        </a>
+      </div>
+      <div class="header-title">
+        <h1>E-Payment System</h1>
+      </div>
+      <div class="header-actions">
+        <button class="btn-menu" (click)="toggleMenu()" aria-label="Toggle Menu">
+          <span class="material-icons">menu</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main class="main-content">
+    <div class="page-content">
+      <!-- Loading indicator -->
+      <div class="epay-custom-loader" *ngIf="isLoading">
+        <div class="sk-wave">
+          <div class="sk-rect sk-rect1"></div>
+          <div class="sk-rect sk-rect2"></div>
+          <div class="sk-rect sk-rect3"></div>
+          <div class="sk-rect sk-rect4"></div>
+          <div class="sk-rect sk-rect5"></div>
+        </div>
+      </div>
+
+      <!-- Router Outlet -->
+      <router-outlet></router-outlet>
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer class="site-footer">
+    <div class="footer-container">
+      <p>&copy; {{ currentYear }} Ashley Furniture Industries, Inc. All Rights Reserved.</p>
+    </div>
+  </footer>
+</div>
+

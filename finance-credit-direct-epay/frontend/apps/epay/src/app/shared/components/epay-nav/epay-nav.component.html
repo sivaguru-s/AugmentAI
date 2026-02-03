@@ -1,0 +1,10 @@
+<nav class="epay-nav">
+  <a 
+    *ngFor="let item of getVisibleNavItems()"
+    [routerLink]="item.route"
+    routerLinkActive="active"
+    class="nav-link">
+    {{ item.label }}
+  </a>
+</nav>
+

@@ -1,0 +1,78 @@
+<div class="search-form-container">
+  <div class="search-form-header">Search Invoices</div>
+
+  <form [formGroup]="searchForm" (ngSubmit)="onSearch()">
+    <table class="search-table">
+      <tr>
+        <td class="label-cell">Invoice #:</td>
+        <td class="input-cell">
+          <mat-form-field appearance="outline" class="input-xs">
+            <input matInput formControlName="invoiceNumber" maxlength="9">
+            <mat-error *ngIf="getErrorMessage('invoiceNumber')">
+              {{ getErrorMessage('invoiceNumber') }}
+            </mat-error>
+          </mat-form-field>
+        </td>
+
+        <td class="label-cell">Credit #:</td>
+        <td class="input-cell">
+          <mat-form-field appearance="outline" class="input-xs">
+            <input matInput formControlName="creditNumber" maxlength="15">
+            <mat-error *ngIf="getErrorMessage('creditNumber')">
+              {{ getErrorMessage('creditNumber') }}
+            </mat-error>
+          </mat-form-field>
+        </td>
+
+        <td class="label-cell">PO #:</td>
+        <td class="input-cell">
+          <mat-form-field appearance="outline" class="input-md">
+            <input matInput formControlName="poNumber" maxlength="25">
+            <mat-error *ngIf="getErrorMessage('poNumber')">
+              {{ getErrorMessage('poNumber') }}
+            </mat-error>
+          </mat-form-field>
+        </td>
+      </tr>
+
+      <tr>
+        <td></td>
+        <td colspan="2" class="label-cell-right">Invoice Date:</td>
+        <td class="input-cell">
+          <mat-form-field appearance="outline" class="input-sm">
+            <input matInput [matDatepicker]="fromPicker" formControlName="fromDate">
+            <mat-datepicker-toggle matIconSuffix [for]="fromPicker"></mat-datepicker-toggle>
+            <mat-datepicker #fromPicker></mat-datepicker>
+            <mat-error *ngIf="getErrorMessage('fromDate')">
+              {{ getErrorMessage('fromDate') }}
+            </mat-error>
+          </mat-form-field>
+        </td>
+
+        <td class="label-cell-center">to</td>
+        <td class="input-cell">
+          <mat-form-field appearance="outline" class="input-sm">
+            <input matInput [matDatepicker]="toPicker" formControlName="toDate">
+            <mat-datepicker-toggle matIconSuffix [for]="toPicker"></mat-datepicker-toggle>
+            <mat-datepicker #toPicker></mat-datepicker>
+            <mat-error *ngIf="getErrorMessage('toDate')">
+              {{ getErrorMessage('toDate') }}
+            </mat-error>
+          </mat-form-field>
+        </td>
+
+        <td colspan="2" class="button-cell">
+          <button mat-raised-button color="primary" type="submit" [disabled]="searchForm.invalid">
+            Search
+          </button>
+        </td>
+      </tr>
+    </table>
+
+    <div class="validation-error" *ngIf="hasDateRangeError()">
+      <mat-icon color="warn">error</mat-icon>
+      <span>{{ getDateRangeErrorMessage() }}</span>
+    </div>
+  </form>
+</div>
+

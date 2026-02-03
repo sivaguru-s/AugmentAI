@@ -1,0 +1,71 @@
+<div class="invoice-search-container">
+  <!-- Page Title -->
+  <h1 class="page-title">E-Payment</h1>
+
+  <!-- Navigation Tabs -->
+  <epay-nav [isAnalyst]="isAnalyst$ | async"></epay-nav>
+
+  <!-- Error Message -->
+  <div *ngIf="error$ | async as error" class="error-message">
+    {{ error }}
+  </div>
+
+  <!-- Search Form -->
+  <epay-invoice-search-form
+    (search)="onSearch()"
+    (updateCriteria)="onUpdateSearchCriteria($event)">
+  </epay-invoice-search-form>
+
+  <!-- Invoice Grid -->
+  <div class="invoice-grid-container">
+    <!-- Grid Header -->
+    <div class="grid-header">
+      <div class="grid-header-left">
+        <span>Customer Invoices From </span>
+        <span class="date-label">{{ fromDate$ | async | date:'MM/dd/yyyy' }}</span>
+        <span> To </span>
+        <span class="date-label">{{ toDate$ | async | date:'MM/dd/yyyy' }}</span>
+      </div>
+      <div class="grid-header-right">
+        <button 
+          mat-raised-button 
+          color="primary" 
+          (click)="onMakePayment()"
+          [disabled]="(selectedCount$ | async) === 0">
+          Make Payment
+        </button>
+        <mat-checkbox 
+          [checked]="showAll$ | async"
+          (change)="onToggleShowAll()">
+          Show All Invoices
+        </mat-checkbox>
+        <button 
+          mat-icon-button 
+          (click)="onExportToExcel()"
+          matTooltip="Export to Excel">
+          <mat-icon>file_download</mat-icon>
+        </button>
+      </div>
+    </div>
+
+    <!-- Pagination (Top) -->
+    <epay-pagination
+      [currentPage]="currentPage$ | async"
+      [totalPages]="totalPages$ | async"
+      [hasNext]="hasNextPage$ | async"
+      [hasPrevious]="hasPreviousPage$ | async"
+      (pageChange)="onPageChange($event)">
+    </epay-pagination>
+
+    <!-- Data Table -->
+    <epay-invoice-data-table
+      [invoices]="invoices$ | async"
+      [selectedInvoices]="selectedInvoices$ | async"
+      [loading]="loading$ | async"
+      (sort)="onSort($event)"
+      (toggleSelection)="onToggleInvoiceSelection($event)"
+      (selectAll)="onSelectAll($event)">
+    </epay-invoice-data-table>
+  </div>
+</div>
+
