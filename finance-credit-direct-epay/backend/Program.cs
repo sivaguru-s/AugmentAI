@@ -37,7 +37,12 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowAngularApp", policy =>
     {
-        policy.WithOrigins("http://localhost:4200", "https://localhost:4200")
+        // Allow any localhost port during development
+        policy.SetIsOriginAllowed(origin =>
+            {
+                var uri = new Uri(origin);
+                return uri.Host == "localhost" || uri.Host == "127.0.0.1";
+            })
               .AllowAnyHeader()
               .AllowAnyMethod()
               .AllowCredentials();
@@ -61,8 +66,9 @@ if (app.Environment.IsDevelopment())
     });
 }
 
-app.UseHttpsRedirection();
+// CORS must be called before other middleware that might short-circuit requests
 app.UseCors("AllowAngularApp");
+app.UseHttpsRedirection();
 app.UseAuthorization();
 app.MapControllers();
 
