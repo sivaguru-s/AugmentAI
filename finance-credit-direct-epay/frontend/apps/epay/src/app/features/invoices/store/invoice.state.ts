@@ -52,7 +52,7 @@ const DEFAULT_DATE_RANGE_DAYS = 180;
  */
 export const initialInvoiceState: InvoiceState = {
   searchCriteria: {
-    customerNumber: '4031300', // Default customer number for development - change as needed
+    customerNumber: '4444400', // Default customer number for development - change as needed
     shipToNumber: '',
     allShipTos: true,  // Set to true to search all ship-tos
     securityMHS: 'MASTERXX', // Default security MHS for development - REQUIRED for stored procedure
