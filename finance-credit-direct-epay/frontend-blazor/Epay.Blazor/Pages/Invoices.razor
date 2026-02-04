@@ -1,0 +1,137 @@
+@page "/invoices"
+@using Epay.Blazor.Models
+@inject Epay.Blazor.Services.InvoiceApiClient Api
+
+<h3>Invoices</h3>
+
+<EditForm Model="criteria" OnValidSubmit="SearchAsync">
+    <DataAnnotationsValidator />
+    <ValidationSummary />
+    <div class="row g-3">
+        <div class="col-md-3">
+            <label class="form-label">Customer #</label>
+            <InputText class="form-control" @bind-Value="criteria.CustomerNumber" />
+        </div>
+        <div class="col-md-3">
+            <label class="form-label">Ship To</label>
+            <InputText class="form-control" @bind-Value="criteria.ShipToNumber" />
+            <div class="form-check mt-1">
+                <InputCheckbox class="form-check-input" @bind-Value="criteria.AllShipTos" />
+                <label class="form-check-label">All Ship-Tos</label>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <label class="form-label">From</label>
+            <InputDate class="form-control" @bind-Value="criteria.FromDate" />
+        </div>
+        <div class="col-md-3">
+            <label class="form-label">To</label>
+            <InputDate class="form-control" @bind-Value="criteria.ToDate" />
+        </div>
+        <div class="col-12">
+            <button class="btn btn-primary" type="submit" disabled="@loading">@("Search" + (loading ? "…" : string.Empty))</button>
+        </div>
+    </div>
+</EditForm>
+
+@if (!string.IsNullOrEmpty(error))
+{
+    <div class="alert alert-danger mt-3">@error</div>
+}
+
+@if (result is not null)
+{
+    <p class="mt-3">Showing @result.Result.Items.Count of @result.Result.TotalRecords records (@result.Result.PageNumber/@result.Result.TotalPages).</p>
+
+    @if (result.Result.Items.Count == 0)
+    {
+        <div class="alert alert-info">No Data To Display</div>
+    }
+    else
+    {
+        <div class="table-responsive">
+            <table class="table table-sm table-striped align-middle">
+                <thead>
+                    <tr>
+                        <th>Invoice #</th>
+                        <th>Date</th>
+                        <th class="text-end">Amount</th>
+                        <th class="text-end">Paid</th>
+                        <th class="text-end">Balance</th>
+                        <th>PO #</th>
+                        <th>Order #</th>
+                        <th>Days</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                @foreach (var inv in result.Result.Items)
+                {
+                    <tr>
+                        <td>@inv.InvoiceNumber</td>
+                        <td>@inv.InvoiceDate.ToString("yyyy-MM-dd")</td>
+                        <td class="text-end">@inv.InvoiceAmount.ToString("C")</td>
+                        <td class="text-end">@inv.AmountPaid.ToString("C")</td>
+                        <td class="text-end">@inv.Balance.ToString("C")</td>
+                        <td>@inv.PONumber</td>
+                        <td>@inv.OrderNumber</td>
+                        <td>@inv.Days</td>
+                        <td>@inv.EPayStatus</td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        </div>
+    }
+}
+
+@code {
+    private InvoiceSearchRequest criteria = new()
+    {
+        CustomerNumber = "4444400",
+        ShipToNumber = string.Empty,
+        AllShipTos = true,
+        SecurityMHS = "MASTERXX",
+        PageNumber = 1,
+        PageSize = 500,
+        SortAscending = true,
+        SortColumn = null,
+        ShowAll = false,
+        FromDate = DateTime.Today.AddDays(-180),
+        ToDate = DateTime.Today
+    };
+
+    private InvoiceSearchResponse? result;
+    private bool loading;
+    private string? error;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            var days = await Api.GetDefaultDateSpanAsync();
+            criteria.FromDate = DateTime.Today.AddDays(-days);
+            criteria.ToDate = DateTime.Today;
+        }
+        catch { /* use 180-day default if endpoint not reachable */ }
+    }
+
+    private async Task SearchAsync()
+    {
+        loading = true;
+        error = null;
+        result = null;
+        try
+        {
+            result = await Api.SearchInvoicesAsync(criteria);
+        }
+        catch (Exception ex)
+        {
+            error = ex.Message;
+        }
+        finally
+        {
+            loading = false;
+        }
+    }
+}
