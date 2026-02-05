@@ -2,34 +2,53 @@
 @using Epay.Blazor.Models
 @inject Epay.Blazor.Services.InvoiceApiClient Api
 
-<h3>Invoices</h3>
-
 <EditForm Model="criteria" OnValidSubmit="SearchAsync">
     <DataAnnotationsValidator />
-    <ValidationSummary />
-    <div class="row g-3">
-        <div class="col-md-3">
-            <label class="form-label">Customer #</label>
-            <InputText class="form-control" @bind-Value="criteria.CustomerNumber" />
-        </div>
-        <div class="col-md-3">
-            <label class="form-label">Ship To</label>
-            <InputText class="form-control" @bind-Value="criteria.ShipToNumber" />
-            <div class="form-check mt-1">
-                <InputCheckbox class="form-check-input" @bind-Value="criteria.AllShipTos" />
-                <label class="form-check-label">All Ship-Tos</label>
+    <div class="epay-panel">
+        <div class="hdr">Search Invoices</div>
+        <div class="body">
+            <div class="row g-2 align-items-end">
+                <div class="col-md-2">
+                    <label>Customer #</label>
+                    <InputText class="form-control" @bind-Value="criteria.CustomerNumber" />
+                </div>
+                <div class="col-md-2">
+                    <label>Ship To</label>
+                    <InputText class="form-control" @bind-Value="criteria.ShipToNumber" />
+                    <div class="form-check mt-1">
+                        <InputCheckbox class="form-check-input" @bind-Value="criteria.AllShipTos" />
+                        <label class="form-check-label text-small">All Ship-Tos</label>
+                    </div>
+                </div>
+                <div class="col-md-2">
+                    <label>Invoice #</label>
+                    <InputText class="form-control" @bind-Value="criteria.InvoiceNumber" />
+                </div>
+                <div class="col-md-2">
+                    <label>Credit #</label>
+                    <InputText class="form-control" @bind-Value="criteria.CreditNumber" />
+                </div>
+                <div class="col-md-2">
+                    <label>PO #</label>
+                    <InputText class="form-control" @bind-Value="criteria.PONumber" />
+                </div>
+                <div class="col-md-2">
+                    <label>Invoice Date</label>
+                    <div class="d-flex gap-1">
+                        <InputDate class="form-control" @bind-Value="criteria.FromDate" />
+                        <InputDate class="form-control" @bind-Value="criteria.ToDate" />
+                    </div>
+                </div>
+                <div class="col-md-2">
+                    <button class="btn btn-adr w-100" type="submit" disabled="@loading">Search</button>
+                </div>
+                <div class="col-md-3 d-flex align-items-center">
+                    <div class="form-check">
+                        <InputCheckbox class="form-check-input" @bind-Value="criteria.ShowAll" />
+                        <label class="form-check-label text-small">Show All Invoices</label>
+                    </div>
+                </div>
             </div>
-        </div>
-        <div class="col-md-3">
-            <label class="form-label">From</label>
-            <InputDate class="form-control" @bind-Value="criteria.FromDate" />
-        </div>
-        <div class="col-md-3">
-            <label class="form-label">To</label>
-            <InputDate class="form-control" @bind-Value="criteria.ToDate" />
-        </div>
-        <div class="col-12">
-            <button class="btn btn-primary" type="submit" disabled="@loading">@("Search" + (loading ? "…" : string.Empty))</button>
         </div>
     </div>
 </EditForm>
@@ -49,8 +68,14 @@
     }
     else
     {
+        <div class="d-flex justify-content-between align-items-center mt-12 mb-2">
+            <div>
+                <button class="btn btn-adr btn-sm me-2" disabled>Make Payment</button>
+                <button class="btn btn-outline-secondary btn-sm" disabled>Export to Excel</button>
+            </div>
+        </div>
         <div class="table-responsive">
-            <table class="table table-sm table-striped align-middle">
+            <table class="table table-sm epay-grid align-middle">
                 <thead>
                     <tr>
                         <th>Invoice #</th>

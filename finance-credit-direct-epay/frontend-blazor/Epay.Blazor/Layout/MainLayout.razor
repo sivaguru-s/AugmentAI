@@ -1,16 +1,56 @@
 ﻿@inherits LayoutComponentBase
-<div class="page">
-    <div class="sidebar">
-        <NavMenu />
+
+<div class="ad-shell">
+    <header class="ad-header">
+        <div class="ad-header-inner">
+            <a class="ad-brand" href="/">
+                <span class="ad-brand-triangle"></span>
+                <span class="ad-brand-text">ASHLEYDIRECT</span>
+            </a>
+            <div class="ad-header-right">
+                <!-- Placeholder for user info -->
+            </div>
+        </div>
+    </header>
+
+    <div class="ad-titlebar">
+        <div class="ad-container">
+            <h1 class="ad-title">E‑Payment</h1>
+        </div>
+    </div>
+    <div class="ad-container">
+        <EpayTopNav />
     </div>
 
-    <main>
-        <div class="top-row px-4">
-            <a href="https://learn.microsoft.com/aspnet/core/" target="_blank">About</a>
-        </div>
-
-        <article class="content px-4">
-            @Body
-        </article>
+    <main class="ad-container ad-content">
+        @Body
     </main>
+
+    <footer class="ad-footer">
+        <div class="ad-container ad-footer-grid">
+            <section>
+                <h6>Get To Know Us</h6>
+                <ul>
+                    <li><a href="#">The Ashley Story</a></li>
+                    <li><a href="#">News</a></li>
+                    <li><a href="#">Company Overview</a></li>
+                </ul>
+            </section>
+            <section>
+                <h6>Customer Care</h6>
+                <ul>
+                    <li><a href="#">How to Join Ashley Express</a></li>
+                    <li><a href="#">Forms</a></li>
+                    <li><a href="#">Price Lists</a></li>
+                </ul>
+            </section>
+            <section>
+                <h6>Get Inspired</h6>
+                <ul>
+                    <li><a href="#">Top Sellers</a></li>
+                    <li><a href="#">Product Catalog</a></li>
+                </ul>
+            </section>
+        </div>
+    </footer>
 </div>

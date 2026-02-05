@@ -1,0 +1,37 @@
+/* Ashley Direct UX – compact, utility-like styles for E‑Pay */
+:root{
+  --ad-brand:#DC6901; /* Ashley orange */
+  --ad-link:#0b66c3;
+  --ad-border:#cfcfcf;
+  --ad-beige:#f2e6d8;
+}
+html,body{font-family:"Open Sans", Arial, sans-serif; color:#333; font-size:14px;}
+
+/* Buttons */
+.btn-adr{background-color:var(--ad-brand); border-color:var(--ad-brand); color:#fff;}
+.btn-adr:hover{background-color:#c85f01; border-color:#c85f01; color:#fff;}
+
+/* Top nav under the title */
+.epay-topnav{margin:8px 0 16px; text-align:center; font-size:12px;}
+.epay-topnav a{color:var(--ad-link); text-decoration:none; margin:0 6px;}
+.epay-topnav a:hover{text-decoration:underline;}
+.epay-topnav .sep{color:#999; margin:0 6px;}
+
+/* Search panel */
+.epay-panel{border:1px solid var(--ad-border); background:#fff;}
+.epay-panel .hdr{background:#f6f6f6; border-bottom:1px solid var(--ad-border); padding:6px 8px; font-weight:600; font-size:12px;}
+.epay-panel .body{padding:8px;}
+.epay-panel label{font-size:12px; margin-bottom:2px;}
+.epay-panel .form-control,.epay-panel input[type=date]{height:28px; padding:2px 6px; font-size:12px;}
+
+/* Grid */
+.table.epay-grid{font-size:12px; border-collapse:collapse; width:100%;}
+.table.epay-grid th,.table.epay-grid td{border:1px solid var(--ad-border) !important; padding:4px 6px !important;}
+.table.epay-grid thead th{background:#f0f0f0; font-weight:600;}
+
+/* Utility */
+.text-right{text-align:right;}
+.text-small{font-size:12px;}
+.mt-8{margin-top:8px;}
+.mt-12{margin-top:12px;}
+
