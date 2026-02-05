@@ -62,13 +62,67 @@
 
 @if (result is not null)
 {
-    @if (criteria.ShowAll)
+    <div class="d-flex justify-content-between align-items-center mt-3 mb-2">
+        <div class="d-flex align-items-center gap-3">
+            <span class="text-muted small">
+                @if (criteria.ShowAll)
+                {
+                    <text>Showing all @result.Result.Items.Count records</text>
+                }
+                else
+                {
+                    <text>Showing @result.Result.Items.Count of @result.Result.TotalRecords records</text>
+                }
+            </span>
+            @if (!criteria.ShowAll)
+            {
+                <div class="d-flex align-items-center gap-2">
+                    <label class="small text-muted mb-0">Page Size:</label>
+                    <select class="form-select form-select-sm" style="width: auto;"
+                            value="@criteria.PageSize" @onchange="OnPageSizeChanged">
+                        <option value="50">50</option>
+                        <option value="100">100</option>
+                        <option value="250">250</option>
+                        <option value="500">500</option>
+                    </select>
+                </div>
+            }
+        </div>
+        <div>
+            <button class="btn btn-adr btn-sm me-2" disabled>Make Payment</button>
+            <button class="btn btn-outline-secondary btn-sm" disabled>Export to Excel</button>
+        </div>
+    </div>
+
+    @* Pagination Controls - matches VB.Net rptPager *@
+    @if (!criteria.ShowAll && result.Result.TotalPages > 1)
     {
-        <p class="mt-3">Showing all @result.Result.Items.Count records.</p>
-    }
-    else
-    {
-        <p class="mt-3">Showing @result.Result.Items.Count of @result.Result.TotalRecords records (Page @result.Result.PageNumber of @result.Result.TotalPages).</p>
+        <div class="pagination-container text-center mb-2">
+            <nav aria-label="Invoice pagination">
+                <ul class="pagination pagination-sm justify-content-center mb-0">
+                    @* Previous button *@
+                    <li class="page-item @(result.Result.HasPreviousPage ? "" : "disabled")">
+                        <a class="page-link" href="javascript:void(0)" @onclick="() => GoToPage(criteria.PageNumber - 1)"
+                           @onclick:preventDefault="true">Prev</a>
+                    </li>
+
+                    @* Page numbers *@
+                    @foreach (var pageNum in GetPageNumbers())
+                    {
+                        <li class="page-item @(pageNum == criteria.PageNumber ? "active" : "")">
+                            <a class="page-link" href="javascript:void(0)" @onclick="() => GoToPage(pageNum)"
+                               @onclick:preventDefault="true">@pageNum</a>
+                        </li>
+                    }
+
+                    @* Next button *@
+                    <li class="page-item @(result.Result.HasNextPage ? "" : "disabled")">
+                        <a class="page-link" href="javascript:void(0)" @onclick="() => GoToPage(criteria.PageNumber + 1)"
+                           @onclick:preventDefault="true">Next</a>
+                    </li>
+                </ul>
+            </nav>
+        </div>
     }
 
     @if (result.Result.Items.Count == 0)
@@ -77,12 +131,6 @@
     }
     else
     {
-        <div class="d-flex justify-content-between align-items-center mt-12 mb-2">
-            <div>
-                <button class="btn btn-adr btn-sm me-2" disabled>Make Payment</button>
-                <button class="btn btn-outline-secondary btn-sm" disabled>Export to Excel</button>
-            </div>
-        </div>
         <div class="table-responsive">
             <table class="table table-sm epay-grid align-middle">
                 <thead>
@@ -193,5 +241,62 @@
 
         // Trigger search immediately (matches VB.Net behavior)
         await SearchAsync();
+    }
+
+    /// <summary>
+    /// Navigate to a specific page.
+    /// Mirrors VB.Net Page_Changed event handler.
+    /// </summary>
+    private async Task GoToPage(int pageNumber)
+    {
+        if (result == null || pageNumber < 1 || pageNumber > result.Result.TotalPages)
+            return;
+
+        criteria.PageNumber = pageNumber;
+        await SearchAsync();
+    }
+
+    /// <summary>
+    /// Handle page size change from dropdown.
+    /// Resets to page 1 when page size changes.
+    /// </summary>
+    private async Task OnPageSizeChanged(ChangeEventArgs e)
+    {
+        if (int.TryParse(e.Value?.ToString(), out int newPageSize))
+        {
+            criteria.PageSize = newPageSize;
+            criteria.PageNumber = 1; // Reset to first page
+            await SearchAsync();
+        }
+    }
+
+    /// <summary>
+    /// Generate list of page numbers to display (max 10 pages).
+    /// Mirrors VB.Net GridPaging.LoadPagerItems logic.
+    /// </summary>
+    private List<int> GetPageNumbers()
+    {
+        if (result == null) return new List<int>();
+
+        var pages = new List<int>();
+        var totalPages = result.Result.TotalPages;
+        var currentPage = criteria.PageNumber;
+
+        const int maxPages = 10;
+        int startPage = Math.Max(1, currentPage - maxPages / 2);
+        int endPage = Math.Min(totalPages, startPage + maxPages - 1);
+
+        // Adjust start if we're near the end
+        if (endPage - startPage < maxPages - 1)
+        {
+            startPage = Math.Max(1, endPage - maxPages + 1);
+        }
+
+        for (int i = startPage; i <= endPage; i++)
+        {
+            pages.Add(i);
+        }
+
+        return pages;
     }
 }

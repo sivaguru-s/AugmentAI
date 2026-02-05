@@ -32,6 +32,14 @@ html,body{font-family:"Open Sans", Arial, sans-serif; color:#333; font-size:13px
 .table.epay-grid tbody tr:nth-child(even){background:#fafafa;}
 .table.epay-grid a{color:var(--ad-link); text-decoration:underline;}
 
+/* Pagination - matches VB.Net rptPager style (SteelBlue links) */
+.pagination-container{padding:6px 0;}
+.pagination .page-link{color:SteelBlue; font-weight:bold; font-size:12px; padding:2px 8px; border:none; background:transparent;}
+.pagination .page-link:hover{color:#094a8f; text-decoration:underline; background:transparent;}
+.pagination .page-item.active .page-link{color:#333; font-weight:bold; background:transparent; border:none; cursor:default;}
+.pagination .page-item.active .page-link:hover{text-decoration:none;}
+.pagination .page-item.disabled .page-link{color:#999; cursor:not-allowed;}
+
 /* Utility */
 .text-right{text-align:right;}
 .text-small{font-size:12px;}
