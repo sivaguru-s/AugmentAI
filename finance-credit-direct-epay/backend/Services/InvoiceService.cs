@@ -56,15 +56,19 @@ namespace EPay.Api.Services
                 totalPages = Convert.ToInt32(dataTable.Rows[0]["PageCount"]);
             }
 
+            // When ShowAll is true, TotalRecords = actual count returned
+            // When paginated, TotalRecords = totalPages * pageSize (approximate)
+            var totalRecords = request.ShowAll ? invoices.Count : totalPages * request.PageSize;
+
             var response = new InvoiceSearchResponse
             {
                 Result = new PagedResult<InvoiceDto>
                 {
                     Items = invoices,
-                    PageNumber = request.PageNumber,
-                    PageSize = request.PageSize,
-                    TotalPages = totalPages,
-                    TotalRecords = totalPages * request.PageSize
+                    PageNumber = request.ShowAll ? 1 : request.PageNumber,
+                    PageSize = request.ShowAll ? invoices.Count : request.PageSize,
+                    TotalPages = request.ShowAll ? 1 : totalPages,
+                    TotalRecords = totalRecords
                 },
                 FromDate = request.FromDate,
                 ToDate = request.ToDate,

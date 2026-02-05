@@ -44,8 +44,10 @@
                 </div>
                 <div class="col-md-3 d-flex align-items-center">
                     <div class="form-check">
-                        <InputCheckbox class="form-check-input" @bind-Value="criteria.ShowAll" />
-                        <label class="form-check-label text-small">Show All Invoices</label>
+                        <input type="checkbox" class="form-check-input" id="chkShowAll"
+                               checked="@criteria.ShowAll"
+                               @onchange="OnShowAllChanged" />
+                        <label class="form-check-label text-small" for="chkShowAll">Show All Invoices</label>
                     </div>
                 </div>
             </div>
@@ -60,7 +62,14 @@
 
 @if (result is not null)
 {
-    <p class="mt-3">Showing @result.Result.Items.Count of @result.Result.TotalRecords records (@result.Result.PageNumber/@result.Result.TotalPages).</p>
+    @if (criteria.ShowAll)
+    {
+        <p class="mt-3">Showing all @result.Result.Items.Count records.</p>
+    }
+    else
+    {
+        <p class="mt-3">Showing @result.Result.Items.Count of @result.Result.TotalRecords records (Page @result.Result.PageNumber of @result.Result.TotalPages).</p>
+    }
 
     @if (result.Result.Items.Count == 0)
     {
@@ -158,5 +167,31 @@
         {
             loading = false;
         }
+    }
+
+    /// <summary>
+    /// Handles the Show All Invoices checkbox change event.
+    /// Mirrors VB.Net behavior: chkShowAllInvoices_CheckedChanged immediately triggers LoadGrid(0)
+    /// </summary>
+    private async Task OnShowAllChanged(ChangeEventArgs e)
+    {
+        // Toggle the ShowAll flag
+        criteria.ShowAll = (bool)(e.Value ?? false);
+
+        // When ShowAll is checked, set PageNumber to 0 (like VB.Net LoadGrid(0))
+        // When unchecked, reset to page 1
+        if (criteria.ShowAll)
+        {
+            criteria.PageNumber = 0;
+            criteria.PageSize = 0;
+        }
+        else
+        {
+            criteria.PageNumber = 1;
+            criteria.PageSize = 500;
+        }
+
+        // Trigger search immediately (matches VB.Net behavior)
+        await SearchAsync();
     }
 }
