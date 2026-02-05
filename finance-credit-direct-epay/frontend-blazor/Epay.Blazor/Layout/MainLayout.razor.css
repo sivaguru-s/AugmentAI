@@ -2,25 +2,55 @@
     --ad-brand: #DC6901;
     --ad-beige: #f2e6d8;
     --ad-border: #cfcfcf;
+    --ad-link: #0b66c3;
+    --ad-gray-bg: #f5f5f5;
 }
 
 .ad-shell { display:flex; flex-direction:column; min-height:100vh; }
-.ad-container { max-width: 1100px; margin: 0 auto; padding: 0 12px; }
+.ad-container { max-width: 1100px; margin: 0 auto; padding: 0 16px; width: 100%; }
 
-.ad-header { background: var(--ad-beige); border-bottom: 1px solid var(--ad-border); }
-.ad-header-inner { height: 48px; display:flex; align-items:center; justify-content:space-between; }
-.ad-brand { display:flex; align-items:center; gap:.5rem; text-decoration:none; color:#222; font-weight:700; letter-spacing:.5px; }
-.ad-brand-triangle { width:0; height:0; border-left:10px solid transparent; border-right:10px solid transparent; border-bottom:16px solid var(--ad-brand); transform: rotate(90deg); }
+/* ===== HEADER (white background) ===== */
+.ad-header { background: #fff; border-bottom: 1px solid var(--ad-border); }
+.ad-header-inner { height: 50px; display:flex; align-items:center; justify-content:space-between; }
 
-.ad-titlebar { background: var(--ad-beige); border-bottom:1px solid var(--ad-border); padding: 10px 0; }
-.ad-title { margin:0; font-size:20px; font-weight:600; text-align:center; }
+/* Logo: orange triangle + ASHLEY (light) DIRECT (bold) */
+.ad-brand { display:flex; align-items:center; gap:8px; text-decoration:none; color:#333; font-size:18px; letter-spacing:0.5px; }
+.ad-brand-triangle {
+    width: 0; height: 0;
+    border-left: 12px solid transparent;
+    border-right: 12px solid transparent;
+    border-bottom: 20px solid var(--ad-brand);
+    transform: rotate(-90deg);
+}
+.ad-brand-text { font-weight: 700; }
+.ad-brand-text .light { font-weight: 400; }
 
-.ad-content { flex:1; padding: 16px 0 32px; }
+/* User info + Workbench on right */
+.ad-header-right { display: flex; align-items: center; gap: 24px; }
+.ad-user-info { display: flex; align-items: center; gap: 6px; font-size: 13px; color: #333; }
+.ad-user-icon { font-size: 18px; }
+.ad-workbench { display: flex; flex-direction: column; align-items: center; font-size: 11px; color: #333; }
+.ad-workbench-icon { font-size: 20px; }
+.ad-workbench-label { font-size: 10px; }
 
-.ad-footer { border-top:1px solid var(--ad-border); background:#fafafa; padding:24px 0; font-size:12px; color:#666; }
-.ad-footer-grid { display:grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
-.ad-footer-grid h6 { font-weight:700; font-size:12px; margin:0 0 8px; color:#444; }
-.ad-footer-grid ul { list-style:none; padding:0; margin:0; }
-.ad-footer-grid li { margin: 2px 0; }
-.ad-footer-grid a { text-decoration:none; color:#2a5db0; }
-.ad-footer-grid a:hover { text-decoration:underline; }
+/* ===== ORANGE SUB-HEADER with account info ===== */
+.ad-subheader { background: var(--ad-brand); color: #fff; padding: 6px 0; }
+.ad-subheader-inner { display: flex; justify-content: flex-end; }
+.ad-account-info { font-size: 13px; font-weight: 600; text-decoration: underline; cursor: pointer; }
+
+/* ===== TITLE BAR (centered E-Payment) ===== */
+.ad-titlebar { background: #fff; padding: 16px 0 8px; }
+.ad-title { margin: 0; font-size: 22px; font-weight: 400; text-align: center; color: #333; }
+
+/* ===== MAIN CONTENT ===== */
+.ad-content { flex: 1; padding: 0 0 40px; background: #fff; }
+
+/* ===== FOOTER ===== */
+.ad-footer { border-top: 1px solid var(--ad-border); background: var(--ad-gray-bg); padding: 30px 0 20px; font-size: 12px; color: #333; }
+.ad-footer-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 40px; }
+.ad-footer-grid section { }
+.ad-footer-grid h6 { font-weight: 700; font-size: 13px; margin: 0 0 12px; color: #333; }
+.ad-footer-grid ul { list-style: none; padding: 0; margin: 0; }
+.ad-footer-grid li { margin: 4px 0; }
+.ad-footer-grid a { text-decoration: underline; color: var(--ad-link); }
+.ad-footer-grid a:hover { color: #094a8f; }

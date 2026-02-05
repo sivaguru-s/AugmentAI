@@ -1,33 +1,36 @@
 /* Ashley Direct UX – compact, utility-like styles for E‑Pay */
 :root{
   --ad-brand:#DC6901; /* Ashley orange */
-  --ad-link:#0b66c3;
+  --ad-link:#0b66c3;  /* Blue link color */
   --ad-border:#cfcfcf;
   --ad-beige:#f2e6d8;
+  --ad-gray-bg:#f5f5f5;
 }
-html,body{font-family:"Open Sans", Arial, sans-serif; color:#333; font-size:14px;}
+html,body{font-family:"Open Sans", Arial, sans-serif; color:#333; font-size:13px; background:#fff;}
 
 /* Buttons */
-.btn-adr{background-color:var(--ad-brand); border-color:var(--ad-brand); color:#fff;}
+.btn-adr{background-color:var(--ad-brand); border-color:var(--ad-brand); color:#fff; font-weight:600; font-size:12px; padding:4px 16px;}
 .btn-adr:hover{background-color:#c85f01; border-color:#c85f01; color:#fff;}
 
-/* Top nav under the title */
-.epay-topnav{margin:8px 0 16px; text-align:center; font-size:12px;}
-.epay-topnav a{color:var(--ad-link); text-decoration:none; margin:0 6px;}
-.epay-topnav a:hover{text-decoration:underline;}
-.epay-topnav .sep{color:#999; margin:0 6px;}
+/* Top nav under the title (pipe-separated links) */
+.epay-topnav{margin:0 0 16px; text-align:center; font-size:12px;}
+.epay-topnav a{color:var(--ad-link); text-decoration:underline; margin:0 4px;}
+.epay-topnav a:hover{color:#094a8f;}
+.epay-topnav .sep{color:#999; margin:0 4px;}
 
 /* Search panel */
-.epay-panel{border:1px solid var(--ad-border); background:#fff;}
-.epay-panel .hdr{background:#f6f6f6; border-bottom:1px solid var(--ad-border); padding:6px 8px; font-weight:600; font-size:12px;}
-.epay-panel .body{padding:8px;}
-.epay-panel label{font-size:12px; margin-bottom:2px;}
-.epay-panel .form-control,.epay-panel input[type=date]{height:28px; padding:2px 6px; font-size:12px;}
+.epay-panel{border:1px solid var(--ad-border); background:#fff; margin-bottom:16px;}
+.epay-panel .hdr{background:var(--ad-gray-bg); border-bottom:1px solid var(--ad-border); padding:6px 10px; font-weight:600; font-size:12px; color:#333;}
+.epay-panel .body{padding:10px;}
+.epay-panel label{font-size:12px; margin-bottom:2px; color:#333;}
+.epay-panel .form-control,.epay-panel input[type=date]{height:26px; padding:2px 6px; font-size:12px; border:1px solid var(--ad-border);}
 
 /* Grid */
-.table.epay-grid{font-size:12px; border-collapse:collapse; width:100%;}
-.table.epay-grid th,.table.epay-grid td{border:1px solid var(--ad-border) !important; padding:4px 6px !important;}
-.table.epay-grid thead th{background:#f0f0f0; font-weight:600;}
+.table.epay-grid{font-size:12px; border-collapse:collapse; width:100%; background:#fff;}
+.table.epay-grid th,.table.epay-grid td{border:1px solid var(--ad-border) !important; padding:3px 6px !important;}
+.table.epay-grid thead th{background:var(--ad-gray-bg); font-weight:600; color:#333;}
+.table.epay-grid tbody tr:nth-child(even){background:#fafafa;}
+.table.epay-grid a{color:var(--ad-link); text-decoration:underline;}
 
 /* Utility */
 .text-right{text-align:right;}

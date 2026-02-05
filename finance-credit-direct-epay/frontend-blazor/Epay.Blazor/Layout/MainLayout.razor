@@ -1,23 +1,41 @@
 ﻿@inherits LayoutComponentBase
 
 <div class="ad-shell">
+    <!-- Top Header: White background with logo and user info -->
     <header class="ad-header">
-        <div class="ad-header-inner">
+        <div class="ad-header-inner ad-container">
             <a class="ad-brand" href="/">
                 <span class="ad-brand-triangle"></span>
-                <span class="ad-brand-text">ASHLEYDIRECT</span>
+                <span class="ad-brand-text"><span class="light">ASHLEY</span>DIRECT</span>
             </a>
             <div class="ad-header-right">
-                <!-- Placeholder for user info -->
+                <div class="ad-user-info">
+                    <span class="ad-user-icon">👤</span>
+                    <span class="ad-user-name">S Sampanthamoorthy</span>
+                </div>
+                <div class="ad-workbench">
+                    <span class="ad-workbench-icon">🖥️</span>
+                    <span class="ad-workbench-label">Workbench</span>
+                </div>
             </div>
         </div>
     </header>
 
-    <div class="ad-titlebar">
-        <div class="ad-container">
-            <h1 class="ad-title">E‑Payment</h1>
+    <!-- Orange sub-header with account info -->
+    <div class="ad-subheader">
+        <div class="ad-container ad-subheader-inner">
+            <span class="ad-account-info">4031300 / ALL - RESIDENT HOME, INC</span>
         </div>
     </div>
+
+    <!-- Page title centered -->
+    <div class="ad-titlebar">
+        <div class="ad-container">
+            <h1 class="ad-title">E-Payment</h1>
+        </div>
+    </div>
+
+    <!-- Navigation links -->
     <div class="ad-container">
         <EpayTopNav />
     </div>
@@ -26,6 +44,7 @@
         @Body
     </main>
 
+    <!-- Footer: 3-column layout -->
     <footer class="ad-footer">
         <div class="ad-container ad-footer-grid">
             <section>
@@ -34,6 +53,11 @@
                     <li><a href="#">The Ashley Story</a></li>
                     <li><a href="#">News</a></li>
                     <li><a href="#">Company Overview</a></li>
+                    <li><a href="#">Ashley Family</a></li>
+                    <li><a href="#">Leadership</a></li>
+                    <li><a href="#">History</a></li>
+                    <li><a href="#">FAQ</a></li>
+                    <li><a href="#">Community</a></li>
                 </ul>
             </section>
             <section>
@@ -41,14 +65,25 @@
                 <ul>
                     <li><a href="#">How to Join Ashley Express</a></li>
                     <li><a href="#">Forms</a></li>
-                    <li><a href="#">Price Lists</a></li>
+                    <li><a href="#">Hope to Dream</a></li>
+                    <li><a href="#">Ashley Furniture Industries</a></li>
+                    <li><a href="#">Ashley for the Arts</a></li>
+                    <li><a href="#">Ashley Global Retail</a></li>
+                    <li><a href="#">Soldiers Walk</a></li>
                 </ul>
             </section>
             <section>
                 <h6>Get Inspired</h6>
                 <ul>
+                    <li><a href="#">Company Contacts</a></li>
                     <li><a href="#">Top Sellers</a></li>
+                    <li><a href="#">Hot Buys</a></li>
+                    <li><a href="#">Price Lists</a></li>
                     <li><a href="#">Product Catalog</a></li>
+                    <li><a href="#">Product Catalog FAQs</a></li>
+                    <li><a href="#">Sales History 2.0 FAQs</a></li>
+                    <li><a href="#">Wishlist</a></li>
+                    <li><a href="#">Extracts</a></li>
                 </ul>
             </section>
         </div>
