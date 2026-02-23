@@ -1,0 +1,11 @@
+C:\AugmentAI\servicenow-agent\src\IncidentResolution.Core\bin\Debug\net8.0\IncidentResolution.Core.deps.json
+C:\AugmentAI\servicenow-agent\src\IncidentResolution.Core\bin\Debug\net8.0\IncidentResolution.Core.dll
+C:\AugmentAI\servicenow-agent\src\IncidentResolution.Core\bin\Debug\net8.0\IncidentResolution.Core.pdb
+C:\AugmentAI\servicenow-agent\src\IncidentResolution.Core\obj\Debug\net8.0\IncidentResolution.Core.GeneratedMSBuildEditorConfig.editorconfig
+C:\AugmentAI\servicenow-agent\src\IncidentResolution.Core\obj\Debug\net8.0\IncidentResolution.Core.AssemblyInfoInputs.cache
+C:\AugmentAI\servicenow-agent\src\IncidentResolution.Core\obj\Debug\net8.0\IncidentResolution.Core.AssemblyInfo.cs
+C:\AugmentAI\servicenow-agent\src\IncidentResolution.Core\obj\Debug\net8.0\IncidentResolution.Core.csproj.CoreCompileInputs.cache
+C:\AugmentAI\servicenow-agent\src\IncidentResolution.Core\obj\Debug\net8.0\IncidentResolution.Core.dll
+C:\AugmentAI\servicenow-agent\src\IncidentResolution.Core\obj\Debug\net8.0\refint\IncidentResolution.Core.dll
+C:\AugmentAI\servicenow-agent\src\IncidentResolution.Core\obj\Debug\net8.0\IncidentResolution.Core.pdb
+C:\AugmentAI\servicenow-agent\src\IncidentResolution.Core\obj\Debug\net8.0\ref\IncidentResolution.Core.dll

@@ -1,0 +1,175 @@
+@page "/"
+@inject ResolutionApiClient Api
+
+<PageTitle>Incident Resolution Assistant</PageTitle>
+
+<!-- Input Card -->
+<div class="card">
+    <div class="card-header">
+        <span>📝</span> Describe Your Incident
+    </div>
+    <div class="card-body">
+        <EditForm Model="@request" OnValidSubmit="@SubmitAsync">
+            <div class="form-group">
+                <label for="description">Issue/Incident Description</label>
+                <textarea id="description" class="form-control" 
+                    @bind="request.IncidentDescription" 
+                    placeholder="Describe the incident or issue you're experiencing. Be as detailed as possible for better recommendations..."
+                    rows="5"></textarea>
+            </div>
+            
+            <div class="form-group">
+                <label for="category">Category (optional)</label>
+                <select id="category" class="form-control" @bind="request.Category">
+                    <option value="">-- Select Category --</option>
+                    <option value="Software">Software</option>
+                    <option value="Hardware">Hardware</option>
+                    <option value="Network">Network</option>
+                    <option value="Database">Database</option>
+                    <option value="Security">Security</option>
+                    <option value="Finance">Finance Systems</option>
+                    <option value="Other">Other</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <div class="form-check">
+                    <input type="checkbox" id="sendEmail" class="form-check-input" @bind="request.SendEmail" />
+                    <label for="sendEmail">Send resolution email to Finance Systems DL</label>
+                </div>
+            </div>
+            
+            <button type="submit" class="btn btn-primary" disabled="@loading">
+                @if (loading)
+                {
+                    <span class="spinner" style="width:16px;height:16px;border-width:2px;"></span>
+                    <span>Analyzing...</span>
+                }
+                else
+                {
+                    <span>🔍</span>
+                    <span>Get Resolution Recommendations</span>
+                }
+            </button>
+        </EditForm>
+    </div>
+</div>
+
+<!-- Error Message -->
+@if (!string.IsNullOrEmpty(error))
+{
+    <div class="alert alert-error">
+        <span>❌</span> @error
+    </div>
+}
+
+<!-- Loading State -->
+@if (loading)
+{
+    <div class="card">
+        <div class="card-body">
+            <div class="loading-indicator">
+                <div class="spinner"></div>
+                <p>Searching ServiceNow and generating recommendations...</p>
+            </div>
+        </div>
+    </div>
+}
+
+<!-- Results -->
+@if (response != null && !loading)
+{
+    <!-- Email Status -->
+    @if (request.SendEmail)
+    {
+        @if (response.EmailSent)
+        {
+            <div class="alert alert-success">
+                <span>✅</span> Resolution email sent to Finance Systems distribution list
+            </div>
+        }
+        else if (!string.IsNullOrEmpty(response.EmailError))
+        {
+            <div class="alert alert-error">
+                <span>⚠️</span> Email failed: @response.EmailError
+            </div>
+        }
+    }
+
+    <div class="card">
+        <div class="card-header">
+            <span>💡</span> Top @response.Resolutions.Count Resolution Recommendations
+        </div>
+        <div class="card-body">
+            @if (response.Resolutions.Any())
+            {
+                @foreach (var resolution in response.Resolutions)
+                {
+                    <div class="resolution-card">
+                        <div class="resolution-header">
+                            <span class="resolution-rank">@resolution.Rank</span>
+                            <span class="resolution-title">@resolution.Title</span>
+                            <span class="confidence-badge">@((resolution.ConfidenceScore * 100).ToString("0"))% Match</span>
+                        </div>
+                        <p class="resolution-description">@resolution.Description</p>
+                        @if (resolution.Steps.Any())
+                        {
+                            <div class="resolution-steps">
+                                <h4>Resolution Steps:</h4>
+                                <ol>
+                                    @foreach (var step in resolution.Steps)
+                                    {
+                                        <li>@step</li>
+                                    }
+                                </ol>
+                            </div>
+                        }
+                        <p class="resolution-meta">
+                            Source: @resolution.SourceIncidentNumber | Category: @resolution.Category
+                        </p>
+                    </div>
+                }
+            }
+            else
+            {
+                <div class="alert alert-info">
+                    <span>ℹ️</span> No matching resolutions found. Please try a different description.
+                </div>
+            }
+        </div>
+    </div>
+}
+
+@code {
+    private ResolutionRequest request = new() { SendEmail = true };
+    private ResolutionResponse? response;
+    private bool loading;
+    private string? error;
+
+    private async Task SubmitAsync()
+    {
+        if (string.IsNullOrWhiteSpace(request.IncidentDescription))
+        {
+            error = "Please enter an incident description.";
+            return;
+        }
+
+        error = null;
+        response = null;
+        loading = true;
+
+        try
+        {
+            response = await Api.GetRecommendationsAsync(request);
+        }
+        catch (Exception ex)
+        {
+            error = $"Failed to get recommendations: {ex.Message}";
+        }
+        finally
+        {
+            loading = false;
+        }
+    }
+}
+

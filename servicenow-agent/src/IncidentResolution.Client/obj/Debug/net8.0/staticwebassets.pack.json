@@ -1,0 +1,41 @@
+{
+  "Files": [
+    {
+      "Id": "C:\\AugmentAI\\servicenow-agent\\src\\IncidentResolution.Client\\bin\\Debug\\net8.0\\wwwroot\\_framework\\blazor.webassembly.js",
+      "PackagePath": "staticwebassets\\_framework\\blazor.webassembly.js"
+    },
+    {
+      "Id": "C:\\AugmentAI\\servicenow-agent\\src\\IncidentResolution.Client\\wwwroot\\appsettings.json",
+      "PackagePath": "staticwebassets\\appsettings.json"
+    },
+    {
+      "Id": "C:\\AugmentAI\\servicenow-agent\\src\\IncidentResolution.Client\\wwwroot\\css\\app.css",
+      "PackagePath": "staticwebassets\\css\\app.css"
+    },
+    {
+      "Id": "C:\\AugmentAI\\servicenow-agent\\src\\IncidentResolution.Client\\wwwroot\\index.html",
+      "PackagePath": "staticwebassets\\index.html"
+    },
+    {
+      "Id": "obj\\Debug\\net8.0\\staticwebassets\\msbuild.IncidentResolution.Client.Microsoft.AspNetCore.StaticWebAssetEndpoints.props",
+      "PackagePath": "build\\Microsoft.AspNetCore.StaticWebAssetEndpoints.props"
+    },
+    {
+      "Id": "obj\\Debug\\net8.0\\staticwebassets\\msbuild.IncidentResolution.Client.Microsoft.AspNetCore.StaticWebAssets.props",
+      "PackagePath": "build\\Microsoft.AspNetCore.StaticWebAssets.props"
+    },
+    {
+      "Id": "obj\\Debug\\net8.0\\staticwebassets\\msbuild.build.IncidentResolution.Client.props",
+      "PackagePath": "build\\IncidentResolution.Client.props"
+    },
+    {
+      "Id": "obj\\Debug\\net8.0\\staticwebassets\\msbuild.buildMultiTargeting.IncidentResolution.Client.props",
+      "PackagePath": "buildMultiTargeting\\IncidentResolution.Client.props"
+    },
+    {
+      "Id": "obj\\Debug\\net8.0\\staticwebassets\\msbuild.buildTransitive.IncidentResolution.Client.props",
+      "PackagePath": "buildTransitive\\IncidentResolution.Client.props"
+    }
+  ],
+  "ElementsToRemove": []
+}
