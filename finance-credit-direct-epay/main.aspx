@@ -8,6 +8,7 @@
     <script type="text/javascript"  src="/Scripts/DateValidation.js"></script>
     <script type="text/javascript" src="/Scripts/gridviewScroll.min.js"></script>
     <script type="text/javascript" src="Scripts/Main.js?20161011"></script>
+    <script type="text/javascript" src="Scripts/InvoiceSelection.js?20250306"></script>
 	<style type="text/css">
 	    .ui-datepicker-trigger {
             cursor: pointer!important;
@@ -83,8 +84,9 @@
                 </asp:Repeater>
             </div>
             <div id="grview" runat="server" >
-                <asp:GridView ID="gvInvoices" runat="server" Width="100%" AllowSorting="true" 
-                        GridLines="both" EmptyDataText="No Data To Display" AutoGenerateColumns="false">
+                <asp:GridView ID="gvInvoices" runat="server" Width="100%" AllowSorting="true"
+                        GridLines="both" EmptyDataText="No Data To Display" AutoGenerateColumns="false"
+                        EnableViewState="false">
                     <EmptyDataRowStyle CssClass="ContentBackground" HorizontalAlign="Center" VerticalAlign="Top" />
                     <HeaderStyle CssClass="GridHeaderNative,GridHeaderLock" BackColor="WhiteSmoke" ForeColor="Black" />
                     <RowStyle CssClass="GridMainRow" />
@@ -229,7 +231,21 @@
          -->
         <asp:HiddenField ID="hdnSortColumn" runat="server" Visible="False" />
         <asp:HiddenField ID="hdnSortAscending" runat="server" Visible="False" />
-        </div>          
+
+        <!-- Hidden field to store selected invoice data (replaces ViewState for checkbox selections) -->
+        <asp:HiddenField ID="hdnSelectedInvoices" runat="server" />
+
+        <!-- Initialize JavaScript invoice selection manager -->
+        <script type="text/javascript">
+            $(document).ready(function () {
+                // Initialize the invoice selection manager
+                InvoiceSelection.init(
+                    '<%= hdnSelectedInvoices.ClientID %>',
+                    '<%= gvInvoices.ClientID %>'
+                );
+            });
+        </script>
+        </div>
     <awr:ResponsiveADFooter ID="ResponsiveADFooter" runat="server" />
 </form>
 </body>

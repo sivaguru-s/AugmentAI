@@ -3,6 +3,9 @@ Imports System.Xml
 Partial Public Class main
     Inherits EpayBasePage
 
+    ' Initialize logger
+    Private Shared ReadOnly log As Logger = New Logger()
+
 #Region " Declarations "
 
     Private bIsExcelResponseTerminating As Boolean = False
@@ -190,29 +193,76 @@ Partial Public Class main
         Dim refNo As Integer = 0
 
         Try
+            Logger.Info("Make Payment button clicked", "main.aspx")
+
+            ' Log grid state
+            Dim gridRowCount As Integer = Me.gvInvoices.Rows.Count
+            Logger.Debug(String.Format("Grid has {0} rows", gridRowCount), "main.aspx")
+
             If Me.AreInvoicesSelected() Then
+                Logger.Info("Invoices selected - proceeding with payment", "main.aspx")
 
                 totalAmt = WritePaymentFiles(refNo)
 
                 If totalAmt = 0 Then
+                    Logger.Warning(String.Format("Payment failed - Invoices already in EPay file. RefNo={0}", refNo), "main.aspx")
                     lblErrorMsg.Text = "Invoices are already in EPay File!"
+
                 ElseIf totalAmt < 0 Then
+                    Logger.Error(String.Format("Payment failed - Negative amount: {0:C}. RefNo={1}", totalAmt, refNo), "main.aspx")
                     Common.DeleteEpayRecords(Me.SessionData("CUSTOMERNUMBER"), refNo, Me.SessionData("LOGON_USER"))
                     lblErrorMsg.Text = "Amount is less then 0!"
 
                 Else
+                    Logger.Info(String.Format("Payment submitted successfully - RefNo={0}, Amount={1:C}", refNo, totalAmt), "main.aspx")
                     Response.Redirect(String.Format("Confirmation.aspx?RefNo={0}", refNo.ToString), False)
 
                 End If
 
             Else
+                ' Log detailed information about why no invoices were selected
+                Dim enabledCount As Integer = 0
+                Dim disabledCount As Integer = 0
+                Dim checkedCount As Integer = 0
+                Dim statusSummary As New System.Text.StringBuilder()
+
+                For Each row As GridViewRow In Me.gvInvoices.Rows
+                    Dim chk As CheckBox = DirectCast(row.FindControl(GRID_SELECT_ID), CheckBox)
+                    If chk.Enabled Then
+                        enabledCount += 1
+                        If chk.Checked Then
+                            checkedCount += 1
+                        End If
+                    Else
+                        disabledCount += 1
+                        ' Get the status of disabled invoices
+                        Dim statusLink As HyperLink = DirectCast(row.FindControl(GRID_STATUS_ID), HyperLink)
+                        If statusLink IsNot Nothing AndAlso Not String.IsNullOrEmpty(statusLink.Text) Then
+                            statusSummary.Append(statusLink.Text & ", ")
+                        End If
+                    End If
+                Next
+
+                ' Build detailed warning message
+                Dim logMessage As String = String.Format("No invoices selected - TotalRows={0}, Enabled={1}, Disabled={2}, Checked={3}", _
+                                                        gridRowCount, enabledCount, disabledCount, checkedCount)
+
+                If disabledCount > 0 AndAlso statusSummary.Length > 0 Then
+                    logMessage &= String.Format(", DisabledStatuses=[{0}]", statusSummary.ToString().TrimEnd(","c, " "c))
+                End If
+
+                Logger.Warning(logMessage, "main.aspx")
+
                 lblErrorMsg.Text = "No Invoices to send!"
             End If
 
         Catch ex As Exception
+            Logger.Error(String.Format("Payment processing error - RefNo={0}", refNo), ex, "main.aspx")
+
             'Remove Epay records if there is a failure
             If refNo > 0 Then
                 Common.DeleteEpayRecords(Me.SessionData("CUSTOMERNUMBER"), refNo, Me.SessionData("LOGON_USER"))
+                Logger.Info(String.Format("Cleaned up EPay records for RefNo={0}", refNo), "main.aspx")
             End If
 
             Me.RedirectToErrorProcessing(ex)
@@ -403,18 +453,38 @@ Partial Public Class main
         Dim chkCheckBox As CheckBox
         Try
             chkCheckBox = CType(sender, CheckBox)
+            Logger.Debug(String.Format("Select All clicked - Checked: {0}", chkCheckBox.Checked), "main.aspx")
 
             Dim gridView As GridView = CType(chkCheckBox.NamingContainer.NamingContainer, GridView)
+            Dim selectedInvoices As New List(Of String)()
 
             For Each row As GridViewRow In gridView.Rows
-                If DirectCast(row.FindControl(GRID_SELECT_ID), CheckBox).Enabled = True Then
-                    DirectCast(row.FindControl(GRID_SELECT_ID), CheckBox).Checked = chkCheckBox.Checked
+                Dim chkSelect As CheckBox = DirectCast(row.FindControl(GRID_SELECT_ID), CheckBox)
 
+                If chkSelect.Enabled = True Then
+                    chkSelect.Checked = chkCheckBox.Checked
+
+                    ' If checking all, add to hidden field
+                    If chkCheckBox.Checked Then
+                        Dim hdnPayInfo As HiddenField = DirectCast(row.FindControl(GRID_PAYINFO_ID), HiddenField)
+                        If hdnPayInfo IsNot Nothing AndAlso Not String.IsNullOrEmpty(hdnPayInfo.Value) Then
+                            selectedInvoices.Add(hdnPayInfo.Value)
+                        End If
+                    End If
                 End If
-
             Next
 
+            ' Update hidden field with selected invoices
+            If chkCheckBox.Checked Then
+                Me.hdnSelectedInvoices.Value = String.Join(PAY_INFO_DELIMITER, selectedInvoices.ToArray())
+                Logger.Info(String.Format("Select All - {0} invoices selected", selectedInvoices.Count), "main.aspx")
+            Else
+                Me.hdnSelectedInvoices.Value = String.Empty
+                Logger.Info("Select All - All selections cleared", "main.aspx")
+            End If
+
         Catch ex As Exception
+            Logger.Error("Error in SelectAllCheckboxes", ex, "main.aspx")
             Me.RedirectToErrorProcessing(ex)
 
         End Try
@@ -501,29 +571,73 @@ Partial Public Class main
                 Using xw As New XmlTextWriter(sw)
                     xw.WriteStartElement("invoices")
 
-                    For Each row As GridViewRow In Me.gvInvoices.Rows
-                        If DirectCast(row.FindControl(GRID_SELECT_ID), CheckBox).Checked Then
-                            xw.WriteStartElement("invoice")
+                    ' PRIORITY 1: Use JavaScript-managed hidden field (works without ViewState)
+                    If Not String.IsNullOrEmpty(Me.hdnSelectedInvoices.Value) Then
+                        Logger.Debug("Writing payment files from hidden field (ViewState-independent)", "main.aspx")
 
-                            Dim i As Integer = 1
-                            For Each str As String In DirectCast(row.FindControl(GRID_PAYINFO_ID), HiddenField).Value.Split(PAY_INFO_DELIMITER)
-                                Select Case i
-                                    Case 1
-                                        xw.WriteElementString("number", str)
-                                    Case 2
-                                        xw.WriteElementString("customer", str)
-                                    Case 3
-                                        xw.WriteElementString("ShipTo", str)
-                                    Case Else
-                                        Exit For
-                                End Select
-                                i += 1
-                            Next
+                        Dim selectedInvoices() As String = Me.hdnSelectedInvoices.Value.Split(PAY_INFO_DELIMITER)
+                        Dim invoiceCount As Integer = 0
 
-                            xw.WriteEndElement() 'invoice
+                        For Each payInfo As String In selectedInvoices
+                            If Not String.IsNullOrEmpty(payInfo.Trim()) Then
+                                xw.WriteStartElement("invoice")
 
-                        End If
-                    Next
+                                Dim i As Integer = 1
+                                For Each str As String In payInfo.Split(PAY_INFO_DELIMITER)
+                                    Select Case i
+                                        Case 1
+                                            xw.WriteElementString("number", str)
+                                        Case 2
+                                            xw.WriteElementString("customer", str)
+                                        Case 3
+                                            xw.WriteElementString("ShipTo", str)
+                                        Case Else
+                                            Exit For
+                                    End Select
+                                    i += 1
+                                Next
+
+                                xw.WriteEndElement() 'invoice
+                                invoiceCount += 1
+                            End If
+                        Next
+
+                        Logger.Info(String.Format("Payment XML created from hidden field - {0} invoices", invoiceCount), "main.aspx")
+
+                    ' PRIORITY 2: Fallback to GridView iteration (requires ViewState - legacy support)
+                    ElseIf Me.gvInvoices.Rows.Count > 0 Then
+                        Logger.Debug("Writing payment files from GridView (ViewState-dependent)", "main.aspx")
+
+                        Dim invoiceCount As Integer = 0
+
+                        For Each row As GridViewRow In Me.gvInvoices.Rows
+                            If DirectCast(row.FindControl(GRID_SELECT_ID), CheckBox).Checked Then
+                                xw.WriteStartElement("invoice")
+
+                                Dim i As Integer = 1
+                                For Each str As String In DirectCast(row.FindControl(GRID_PAYINFO_ID), HiddenField).Value.Split(PAY_INFO_DELIMITER)
+                                    Select Case i
+                                        Case 1
+                                            xw.WriteElementString("number", str)
+                                        Case 2
+                                            xw.WriteElementString("customer", str)
+                                        Case 3
+                                            xw.WriteElementString("ShipTo", str)
+                                        Case Else
+                                            Exit For
+                                    End Select
+                                    i += 1
+                                Next
+
+                                xw.WriteEndElement() 'invoice
+                                invoiceCount += 1
+                            End If
+                        Next
+
+                        Logger.Info(String.Format("Payment XML created from GridView - {0} invoices", invoiceCount), "main.aspx")
+                    Else
+                        Logger.Warning("No invoices to write - both hidden field and GridView are empty", "main.aspx")
+                    End If
 
                     xw.WriteEndElement() 'invoices
 
@@ -534,6 +648,7 @@ Partial Public Class main
             End Using
 
         Catch ex As Exception
+            Logger.Error("Error in WritePaymentFiles", ex, "main.aspx")
             Throw
 
         End Try
@@ -542,17 +657,28 @@ Partial Public Class main
 
     Private Function AreInvoicesSelected() As Boolean
         Try
-            For Each row As GridViewRow In Me.gvInvoices.Rows
-                If DirectCast(row.FindControl(GRID_SELECT_ID), CheckBox).Checked Then
-                    Return True
+            ' PRIORITY 1: Check JavaScript-managed hidden field (works without ViewState)
+            If Not String.IsNullOrEmpty(Me.hdnSelectedInvoices.Value) Then
+                Logger.Debug(String.Format("Invoices selected via hidden field - Count: {0}", _
+                    Me.hdnSelectedInvoices.Value.Split(PAY_INFO_DELIMITER).Length), "main.aspx")
+                Return True
+            End If
 
-                End If
+            ' PRIORITY 2: Fallback to GridView iteration (requires ViewState - legacy support)
+            If Me.gvInvoices.Rows.Count > 0 Then
+                For Each row As GridViewRow In Me.gvInvoices.Rows
+                    If DirectCast(row.FindControl(GRID_SELECT_ID), CheckBox).Checked Then
+                        Logger.Debug("Invoices selected via GridView iteration (ViewState enabled)", "main.aspx")
+                        Return True
+                    End If
+                Next
+            End If
 
-            Next
-
+            Logger.Debug("No invoices selected - Hidden field empty and no checked boxes in grid", "main.aspx")
             Return False
 
         Catch ex As Exception
+            Logger.Error("Error in AreInvoicesSelected", ex, "main.aspx")
             Throw
 
         End Try
