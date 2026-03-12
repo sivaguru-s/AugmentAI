@@ -41,8 +41,9 @@ public class OnbaseRepository : IOnbaseRepository
         if (isNumeric)
         {
             // If numeric, search by invoice number with all joins
+            // No TOP limit - return all matching invoices
             query = @"
-                SELECT TOP 50
+                SELECT
                     i.itemnum as InvoiceId,
                     CAST(ki106.keyvaluesmall AS VARCHAR(50)) as InvoiceNumber,
                     NULL as VendorName,
@@ -67,8 +68,9 @@ public class OnbaseRepository : IOnbaseRepository
         else
         {
             // If text, return recent invoices with all data
+            // Limit to 100 for general searches to avoid overwhelming results
             query = @"
-                SELECT TOP 50
+                SELECT TOP 100
                     i.itemnum as InvoiceId,
                     CAST(ki106.keyvaluesmall AS VARCHAR(50)) as InvoiceNumber,
                     NULL as VendorName,
@@ -170,8 +172,9 @@ public class OnbaseRepository : IOnbaseRepository
         using var connection = GetConnection();
 
         // Search by Invoice Date in keyitem112
+        // No TOP limit - return all invoices in the date range
         var query = @"
-            SELECT TOP 50
+            SELECT
                 i.itemnum as InvoiceId,
                 CAST(ki106.keyvaluesmall AS VARCHAR(50)) as InvoiceNumber,
                 NULL as VendorName,
@@ -192,7 +195,7 @@ public class OnbaseRepository : IOnbaseRepository
                 AND ki112.keyvaluedate BETWEEN @StartDate AND @EndDate
             ORDER BY ki112.keyvaluedate DESC";
 
-        return (await connection.QueryAsync<Invoice>(query, new { StartDate = startDate, EndDate = endDate }, commandTimeout: 30)).ToList();
+        return (await connection.QueryAsync<Invoice>(query, new { StartDate = startDate, EndDate = endDate }, commandTimeout: 60)).ToList();
     }
 
     public async Task<List<Invoice>> GetInvoicesByStatusAsync(string status)
@@ -229,8 +232,9 @@ public class OnbaseRepository : IOnbaseRepository
         using var connection = GetConnection();
 
         // Search by amount - using invoice number as proxy (if it represents amount)
+        // No TOP limit - return all invoices in the amount range
         var query = @"
-            SELECT TOP 50
+            SELECT
                 i.itemnum as InvoiceId,
                 CAST(ki106.keyvaluesmall AS VARCHAR(50)) as InvoiceNumber,
                 NULL as VendorName,
@@ -251,7 +255,7 @@ public class OnbaseRepository : IOnbaseRepository
                 AND ki106.keyvaluesmall BETWEEN @MinAmount AND @MaxAmount
             ORDER BY ki106.keyvaluesmall DESC";
 
-        return (await connection.QueryAsync<Invoice>(query, new { MinAmount = minAmount, MaxAmount = maxAmount }, commandTimeout: 30)).ToList();
+        return (await connection.QueryAsync<Invoice>(query, new { MinAmount = minAmount, MaxAmount = maxAmount }, commandTimeout: 60)).ToList();
     }
 
     public async Task<List<Invoice>> GetAllInvoicesAsync(int limit = 100)

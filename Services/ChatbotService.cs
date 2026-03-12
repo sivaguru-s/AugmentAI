@@ -40,32 +40,47 @@ public class ChatbotService : IChatbotService
             {
                 "SearchByVendor" => await _repository.GetInvoicesByVendorAsync(
                     intent.Parameters.GetValueOrDefault("vendorName")?.ToString() ?? string.Empty),
-                
+
                 "SearchByInvoiceNumber" => await _repository.GetInvoicesByNumberAsync(
                     intent.Parameters.GetValueOrDefault("invoiceNumber")?.ToString() ?? string.Empty),
-                
+
                 "SearchByPO" => await _repository.SearchInvoicesAsync(
                     intent.Parameters.GetValueOrDefault("poNumber")?.ToString() ?? string.Empty),
-                
+
                 "SearchByStatus" => await _repository.GetInvoicesByStatusAsync(
                     intent.Parameters.GetValueOrDefault("status")?.ToString() ?? string.Empty),
-                
+
                 "SearchByAmount" => await _repository.GetInvoicesByAmountRangeAsync(
                     Convert.ToDecimal(intent.Parameters.GetValueOrDefault("minAmount") ?? 0m),
                     Convert.ToDecimal(intent.Parameters.GetValueOrDefault("maxAmount") ?? decimal.MaxValue)),
-                
+
                 "SearchByDate" => await _repository.GetInvoicesByDateRangeAsync(
                     Convert.ToDateTime(intent.Parameters.GetValueOrDefault("startDate") ?? DateTime.Today.AddDays(-30)),
                     Convert.ToDateTime(intent.Parameters.GetValueOrDefault("endDate") ?? DateTime.Today)),
-                
+
                 "GeneralSearch" => await _repository.SearchInvoicesAsync(
                     intent.Parameters.GetValueOrDefault("searchTerm")?.ToString() ?? userPrompt),
-                
+
                 _ => await _repository.GetAllInvoicesAsync(50)
             };
 
+            // Apply pagination if specified
+            var skip = Convert.ToInt32(intent.Parameters.GetValueOrDefault("skip") ?? 0);
+            var take = Convert.ToInt32(intent.Parameters.GetValueOrDefault("take") ?? 0);
+            var totalCount = invoices.Count;
+
+            if (skip > 0)
+            {
+                invoices = invoices.Skip(skip).ToList();
+            }
+
+            if (take > 0)
+            {
+                invoices = invoices.Take(take).ToList();
+            }
+
             // Generate a natural language response
-            var answer = GenerateResponse(intent, invoices);
+            var answer = GenerateResponse(intent, invoices, totalCount, skip, take);
 
             return new ChatResponse
             {
@@ -88,7 +103,7 @@ public class ChatbotService : IChatbotService
         }
     }
 
-    private string GenerateResponse(QueryIntent intent, List<Invoice> invoices)
+    private string GenerateResponse(QueryIntent intent, List<Invoice> invoices, int totalCount = 0, int skip = 0, int take = 0)
     {
         if (invoices.Count == 0)
         {
@@ -102,7 +117,19 @@ public class ChatbotService : IChatbotService
         }
 
         var summary = new System.Text.StringBuilder();
-        summary.AppendLine($"I found {invoices.Count} invoice(s) matching your query:");
+
+        // If pagination was applied, show different message
+        if (totalCount > 0 && (skip > 0 || take > 0))
+        {
+            var startIndex = skip + 1;
+            var endIndex = skip + invoices.Count;
+            summary.AppendLine($"I found {totalCount} invoice(s) matching your query. Showing {startIndex} to {endIndex}:");
+        }
+        else
+        {
+            summary.AppendLine($"I found {invoices.Count} invoice(s) matching your query:");
+        }
+
         summary.AppendLine();
 
         // Provide a summary based on intent type

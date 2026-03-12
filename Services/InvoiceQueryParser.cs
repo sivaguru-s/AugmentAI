@@ -20,6 +20,11 @@ public class InvoiceQueryParser : IInvoiceQueryParser
         var prompt = userPrompt.ToLower().Trim();
         var intent = new QueryIntent();
 
+        // Extract pagination parameters first (applies to all queries)
+        var pagination = ExtractPagination(prompt);
+        intent.Parameters["skip"] = pagination.skip;
+        intent.Parameters["take"] = pagination.take;
+
         // Detect intent type and extract parameters
         if (ContainsAny(prompt, new[] { "vendor", "supplier", "company" }))
         {
@@ -221,7 +226,24 @@ public class InvoiceQueryParser : IInvoiceQueryParser
             return (new DateTime(lastYear, 1, 1), new DateTime(lastYear, 12, 31));
         }
 
-        // Try to extract specific dates
+        // Try to extract specific dates - support both ISO (YYYY-MM-DD) and common formats (DD/MM/YYYY, MM-DD-YYYY)
+        // First try ISO format (YYYY-MM-DD)
+        var isoDatePattern = @"(\d{4})[/-](\d{1,2})[/-](\d{1,2})";
+        var isoMatches = Regex.Matches(prompt, isoDatePattern);
+
+        if (isoMatches.Count >= 2)
+        {
+            var date1 = ParseISODate(isoMatches[0].Value);
+            var date2 = ParseISODate(isoMatches[1].Value);
+            return date1 < date2 ? (date1, date2.AddDays(1)) : (date2, date1.AddDays(1));
+        }
+        else if (isoMatches.Count == 1)
+        {
+            var date = ParseISODate(isoMatches[0].Value);
+            return (date, date.AddDays(1));
+        }
+
+        // Try common date formats (DD/MM/YYYY, MM-DD-YYYY)
         var datePattern = @"(\d{1,2})[/-](\d{1,2})[/-](\d{2,4})";
         var matches = Regex.Matches(prompt, datePattern);
 
@@ -229,7 +251,7 @@ public class InvoiceQueryParser : IInvoiceQueryParser
         {
             var date1 = ParseDate(matches[0].Value);
             var date2 = ParseDate(matches[1].Value);
-            return date1 < date2 ? (date1, date2) : (date2, date1);
+            return date1 < date2 ? (date1, date2.AddDays(1)) : (date2, date1.AddDays(1));
         }
         else if (matches.Count == 1)
         {
@@ -239,6 +261,27 @@ public class InvoiceQueryParser : IInvoiceQueryParser
 
         // Default to last 30 days
         return (today.AddDays(-30), today.AddDays(1));
+    }
+
+    private DateTime ParseISODate(string dateStr)
+    {
+        // Parse ISO format: YYYY-MM-DD or YYYY/MM/DD
+        var parts = dateStr.Split(new[] { '-', '/' });
+        if (parts.Length == 3 &&
+            int.TryParse(parts[0], out var year) &&
+            int.TryParse(parts[1], out var month) &&
+            int.TryParse(parts[2], out var day))
+        {
+            try
+            {
+                return new DateTime(year, month, day);
+            }
+            catch
+            {
+                return DateTime.Today;
+            }
+        }
+        return DateTime.Today;
     }
 
     private DateTime ParseDate(string dateStr)
@@ -256,5 +299,40 @@ public class InvoiceQueryParser : IInvoiceQueryParser
         var stopWords = new[] { "show", "get", "find", "search", "list", "all", "me", "the", "for", "invoices", "invoice" };
         var words = prompt.Split(' ').Where(w => !stopWords.Contains(w.ToLower())).ToArray();
         return string.Join(" ", words).Trim();
+    }
+
+    private (int skip, int take) ExtractPagination(string prompt)
+    {
+        int skip = 0;
+        int take = 0; // 0 means no limit
+
+        // Extract "skip X" or "skip first X"
+        var skipPattern = @"skip\s+(?:first\s+)?(\d+)";
+        var skipMatch = Regex.Match(prompt, skipPattern);
+        if (skipMatch.Success)
+        {
+            skip = int.Parse(skipMatch.Groups[1].Value);
+        }
+
+        // Extract "take X" or "take next X" or "show X" or "limit X"
+        var takePattern = @"(?:take|show|limit)\s+(?:next\s+)?(\d+)";
+        var takeMatch = Regex.Match(prompt, takePattern);
+        if (takeMatch.Success)
+        {
+            take = int.Parse(takeMatch.Groups[1].Value);
+        }
+
+        // Extract "first X" (without skip)
+        if (take == 0 && !skipMatch.Success)
+        {
+            var firstPattern = @"first\s+(\d+)";
+            var firstMatch = Regex.Match(prompt, firstPattern);
+            if (firstMatch.Success)
+            {
+                take = int.Parse(firstMatch.Groups[1].Value);
+            }
+        }
+
+        return (skip, take);
     }
 }
