@@ -245,11 +245,22 @@
     </div>
 
     <script>
-        const API_URL = '/api/chatbot/query';
+        // Get the base path from the current URL
+        // This handles both root deployment (/) and subdirectory deployment (/chatbotonbase/)
+        const getBasePath = () => {
+            const path = window.location.pathname;
+            // If we're at the root or index.html, extract the directory
+            const basePath = path.substring(0, path.lastIndexOf('/') + 1);
+            return basePath;
+        };
+
+        const BASE_PATH = getBasePath();
+        const API_URL = `${BASE_PATH}api/chatbot/query`;
 
         // Diagnostic function to test API connectivity
         async function testAPIConnection() {
             console.log('=== API Connection Test ===');
+            console.log('Base Path:', BASE_PATH);
             console.log('API URL:', API_URL);
             console.log('Current Location:', window.location.href);
             console.log('Base URL:', window.location.origin);
@@ -257,14 +268,14 @@
             try {
                 // Test health endpoint
                 console.log('Testing health endpoint...');
-                const healthResponse = await fetch('/api/chatbot/health');
+                const healthResponse = await fetch(`${BASE_PATH}api/chatbot/health`);
                 console.log('Health Status:', healthResponse.status);
                 const healthData = await healthResponse.json();
                 console.log('Health Data:', healthData);
 
                 // Test database connection
                 console.log('Testing database connection...');
-                const dbResponse = await fetch('/api/chatbot/dbtest');
+                const dbResponse = await fetch(`${BASE_PATH}api/chatbot/dbtest`);
                 console.log('DB Test Status:', dbResponse.status);
                 const dbData = await dbResponse.json();
                 console.log('DB Test Data:', dbData);
