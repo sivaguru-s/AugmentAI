@@ -70,7 +70,7 @@ app.Run();
 }
 catch (Exception ex)
 {
-    Log.Fatal(ex, "Application terminated unexpectedly");
+    Log.Error(ex, "Application terminated unexpectedly");
 }
 finally
 {

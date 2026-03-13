@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Chatbot_Onbase.Models;
 using Chatbot_Onbase.Services;
+using Serilog;
 
 namespace Chatbot_Onbase.Controllers;
 
@@ -32,6 +33,7 @@ public class ChatbotController : ControllerBase
 
         try
         {
+            _logger.LogInformation("Chatbot|Query method started");
             var response = await _chatbotService.ProcessQueryAsync(request.Prompt);
             return Ok(response);
         }
