@@ -18,6 +18,7 @@ builder.Services.AddSwaggerGen(c =>
 // Register application services
 builder.Services.AddScoped<IOnbaseRepository, OnbaseRepository>();
 builder.Services.AddScoped<IInvoiceQueryParser, InvoiceQueryParser>();
+builder.Services.AddScoped<IInvoiceAnalyticsService, InvoiceAnalyticsService>();
 builder.Services.AddScoped<IChatbotService, ChatbotService>();
 
 // Add CORS

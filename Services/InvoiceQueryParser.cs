@@ -25,11 +25,42 @@ public class InvoiceQueryParser : IInvoiceQueryParser
         intent.Parameters["skip"] = pagination.skip;
         intent.Parameters["take"] = pagination.take;
 
-        // Detect intent type and extract parameters
-        if (ContainsAny(prompt, new[] { "vendor", "supplier", "company" }))
+        // Extract document type filter (customer vs vendor)
+        var documentType = ExtractDocumentType(prompt);
+        intent.Parameters["documentType"] = documentType;
+
+        // Check if this is an analytics query
+        bool isAnalyticsQuery = ContainsAny(prompt, new[] { "analyze", "analysis", "summary", "summarize", "average", "pricing changes", "rate increase", "trend", "cost breakdown" });
+        intent.Parameters["isAnalytics"] = isAnalyticsQuery;
+
+        // Extract date range if present (for analytics or date-based queries)
+        // Note: "from" is excluded because it's commonly used for vendor names (e.g., "from CDW")
+        if (ContainsAny(prompt, new[] { "date", "month", "year", "between", "during", "january", "february", "march", "april", "may", "june", "july", "august", "september", "october", "november", "december" }))
         {
-            intent.IntentType = "SearchByVendor";
-            intent.Parameters["vendorName"] = ExtractVendorName(prompt);
+            var dates = ExtractDateRange(prompt);
+            intent.Parameters["startDate"] = dates.start;
+            intent.Parameters["endDate"] = dates.end;
+        }
+
+        // Detect intent type and extract parameters
+        // Check if this is a vendor-specific search (has vendor name) vs just filtering by document type
+        // IMPORTANT: Pass original userPrompt (not lowercased) to preserve capital letters for vendor name matching
+        string vendorName = string.Empty;
+        if (ContainsAny(prompt, new[] { "vendor", "supplier", "company", "from" }))
+        {
+            vendorName = ExtractVendorName(userPrompt);
+        }
+
+        if (!string.IsNullOrEmpty(vendorName))
+        {
+            // Specific vendor search
+            intent.IntentType = isAnalyticsQuery ? "AnalyzeByVendor" : "SearchByVendor";
+            intent.Parameters["vendorName"] = vendorName;
+            // If searching by vendor, default to vendor invoices unless customer is specified
+            if (documentType == "all")
+            {
+                intent.Parameters["documentType"] = "vendor";
+            }
         }
         else if (ContainsAny(prompt, new[] { "invoice number", "invoice #", "inv#", "invoice no" }))
         {
@@ -79,14 +110,48 @@ public class InvoiceQueryParser : IInvoiceQueryParser
         return keywords.Any(keyword => text.Contains(keyword));
     }
 
+    private string ExtractDocumentType(string prompt)
+    {
+        // Check for explicit document type keywords
+        // Vendor/AP keywords
+        if (ContainsAny(prompt, new[] { "vendor invoice", "ap invoice", "payable", "vendor", "supplier" }))
+        {
+            return "vendor";
+        }
+
+        // Customer/AR keywords
+        if (ContainsAny(prompt, new[] { "customer invoice", "ar invoice", "receivable", "customer", "sales invoice" }))
+        {
+            return "customer";
+        }
+
+        // Credit memo keywords
+        if (ContainsAny(prompt, new[] { "credit memo", "credit note", "cm" }))
+        {
+            // Check if it's vendor or customer credit memo
+            if (ContainsAny(prompt, new[] { "vendor", "ap", "payable", "supplier" }))
+            {
+                return "vendor_credit";
+            }
+            else if (ContainsAny(prompt, new[] { "customer", "ar", "receivable" }))
+            {
+                return "customer_credit";
+            }
+            return "credit"; // Generic credit memo
+        }
+
+        // Default to "all" - search both customer and vendor invoices
+        return "all";
+    }
+
     private string ExtractVendorName(string prompt)
     {
         var patterns = new[]
         {
-            @"vendor\s+(?:named?\s+)?[""']?([^""']+)[""']?",
-            @"from\s+[""']?([^""']+)[""']?",
-            @"supplier\s+[""']?([^""']+)[""']?",
-            @"company\s+[""']?([^""']+)[""']?"
+            @"(?:vendor|supplier|company)\s+(?:named?\s+)?[""']([^""']+)[""']",  // Quoted vendor name
+            @"from\s+[""']([^""']+)[""']",  // Quoted vendor after "from"
+            @"from\s+((?!invoice|credit|memo|document)[A-Z][\w\s&,.-]+?)(?:\s+for|\s+invoice|\s+credit|\s+memo|\s*$)",  // Vendor name after "from" (must start with capital)
+            @"(?:vendor|supplier|company)\s+(?:named?\s+)?((?!invoice|credit|memo|document)[A-Z][\w\s&,.-]{2,}?)(?:\s+for|\s+invoice|\s+credit|\s*$)"  // Vendor name (must start with capital, at least 3 chars)
         };
 
         foreach (var pattern in patterns)
@@ -94,7 +159,17 @@ public class InvoiceQueryParser : IInvoiceQueryParser
             var match = Regex.Match(prompt, pattern, RegexOptions.IgnoreCase);
             if (match.Success)
             {
-                return match.Groups[1].Value.Trim();
+                var vendorName = match.Groups[1].Value.Trim();
+                // Clean up common trailing words
+                vendorName = Regex.Replace(vendorName, @"\s+(invoice|credit|memo|document|for)s?$", "", RegexOptions.IgnoreCase).Trim();
+
+                // Reject if vendor name is a common keyword
+                if (Regex.IsMatch(vendorName, @"^(invoice|credit|memo|document|all|list|show|for)s?$", RegexOptions.IgnoreCase))
+                {
+                    continue;
+                }
+
+                return vendorName;
             }
         }
 
@@ -188,6 +263,36 @@ public class InvoiceQueryParser : IInvoiceQueryParser
     private (DateTime start, DateTime end) ExtractDateRange(string prompt)
     {
         var today = DateTime.Today;
+
+        // Check for month name + year pattern (e.g., "February 2025", "March 2024")
+        var monthYearPattern = @"(january|february|march|april|may|june|july|august|september|october|november|december)\s+(\d{4})";
+        var monthYearMatch = Regex.Match(prompt, monthYearPattern, RegexOptions.IgnoreCase);
+
+        if (monthYearMatch.Success)
+        {
+            var monthName = monthYearMatch.Groups[1].Value;
+            var year = int.Parse(monthYearMatch.Groups[2].Value);
+            var month = monthName.ToLower() switch
+            {
+                "january" => 1,
+                "february" => 2,
+                "march" => 3,
+                "april" => 4,
+                "may" => 5,
+                "june" => 6,
+                "july" => 7,
+                "august" => 8,
+                "september" => 9,
+                "october" => 10,
+                "november" => 11,
+                "december" => 12,
+                _ => today.Month
+            };
+
+            var startOfMonth = new DateTime(year, month, 1);
+            var endOfMonth = startOfMonth.AddMonths(1).AddDays(-1);
+            return (startOfMonth, endOfMonth.AddDays(1)); // Add 1 day to include the last day
+        }
 
         // Check for relative dates
         if (prompt.Contains("today"))
