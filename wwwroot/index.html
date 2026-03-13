@@ -247,6 +247,43 @@
     <script>
         const API_URL = '/api/chatbot/query';
 
+        // Diagnostic function to test API connectivity
+        async function testAPIConnection() {
+            console.log('=== API Connection Test ===');
+            console.log('API URL:', API_URL);
+            console.log('Current Location:', window.location.href);
+            console.log('Base URL:', window.location.origin);
+
+            try {
+                // Test health endpoint
+                console.log('Testing health endpoint...');
+                const healthResponse = await fetch('/api/chatbot/health');
+                console.log('Health Status:', healthResponse.status);
+                const healthData = await healthResponse.json();
+                console.log('Health Data:', healthData);
+
+                // Test database connection
+                console.log('Testing database connection...');
+                const dbResponse = await fetch('/api/chatbot/dbtest');
+                console.log('DB Test Status:', dbResponse.status);
+                const dbData = await dbResponse.json();
+                console.log('DB Test Data:', dbData);
+
+                console.log('=== All Tests Passed ===');
+                return true;
+            } catch (error) {
+                console.error('=== API Connection Test Failed ===');
+                console.error('Error:', error);
+                return false;
+            }
+        }
+
+        // Run diagnostic on page load
+        window.addEventListener('load', () => {
+            console.log('Page loaded. Running diagnostics...');
+            testAPIConnection();
+        });
+
         function handleKeyPress(event) {
             if (event.key === 'Enter') {
                 sendMessage();
@@ -274,6 +311,9 @@
             const loadingId = addLoadingMessage();
 
             try {
+                console.log('Sending request to:', API_URL);
+                console.log('Request payload:', { prompt: message });
+
                 const response = await fetch(API_URL, {
                     method: 'POST',
                     headers: {
@@ -282,18 +322,84 @@
                     body: JSON.stringify({ prompt: message })
                 });
 
+                console.log('Response status:', response.status);
+                console.log('Response headers:', response.headers);
+
+                // Check if response is OK
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    console.error('Error response:', errorText);
+
+                    let errorData;
+                    try {
+                        errorData = JSON.parse(errorText);
+                    } catch (e) {
+                        errorData = { error: errorText };
+                    }
+
+                    removeMessage(loadingId);
+
+                    // Display detailed error message
+                    let errorMessage = `❌ Error (${response.status}): ${errorData.error || 'Unknown error'}`;
+                    if (errorData.details) {
+                        errorMessage += `\n\nDetails: ${errorData.details}`;
+                    }
+                    if (errorData.exceptionType) {
+                        errorMessage += `\n\nType: ${errorData.exceptionType}`;
+                    }
+                    if (errorData.timestamp) {
+                        errorMessage += `\n\nTime: ${new Date(errorData.timestamp).toLocaleString()}`;
+                    }
+
+                    addMessage(errorMessage, 'bot');
+                    return;
+                }
+
                 const data = await response.json();
+                console.log('Response data:', data);
 
                 // Remove loading
                 removeMessage(loadingId);
+
+                // Check if there's an error in the response data
+                if (data.error) {
+                    let errorMessage = `❌ ${data.error}`;
+                    if (data.details) {
+                        errorMessage += `\n\nDetails: ${data.details}`;
+                    }
+                    addMessage(errorMessage, 'bot');
+                    return;
+                }
 
                 // Add bot response
                 addBotResponse(data);
 
             } catch (error) {
                 removeMessage(loadingId);
-                addMessage('Sorry, I encountered an error. Please try again.', 'bot');
-                console.error('Error:', error);
+
+                console.error('Fetch error:', error);
+                console.error('Error type:', error.constructor.name);
+                console.error('Error message:', error.message);
+                console.error('Error stack:', error.stack);
+
+                // Detailed error message for user
+                let errorMessage = '❌ Connection Error\n\n';
+
+                if (error.name === 'TypeError' && error.message.includes('fetch')) {
+                    errorMessage += 'Cannot connect to the server. Please check:\n';
+                    errorMessage += '• Is the API server running?\n';
+                    errorMessage += '• Is the API URL correct?\n';
+                    errorMessage += `• Current API URL: ${API_URL}\n`;
+                    errorMessage += '• Check browser console for details';
+                } else if (error.name === 'AbortError') {
+                    errorMessage += 'Request was cancelled or timed out.';
+                } else {
+                    errorMessage += `${error.message}\n\n`;
+                    errorMessage += `Error Type: ${error.constructor.name}\n`;
+                    errorMessage += 'Check browser console for more details.';
+                }
+
+                addMessage(errorMessage, 'bot');
             } finally {
                 sendButton.disabled = false;
             }

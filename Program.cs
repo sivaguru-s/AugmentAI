@@ -12,12 +12,34 @@ Log.Logger = new LoggerConfiguration()
 
 try
 {
+    Log.Information("========================================");
     Log.Information("Starting Onbase Invoice Chatbot application");
+    Log.Information("Environment: {Environment}", Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? "Production");
+    Log.Information("Machine: {MachineName}", Environment.MachineName);
+    Log.Information("OS: {OS}", Environment.OSVersion);
+    Log.Information("Current Directory: {Directory}", Directory.GetCurrentDirectory());
+    Log.Information("========================================");
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add Serilog
 builder.Host.UseSerilog();
+
+// Log configuration
+var connectionString = builder.Configuration.GetConnectionString("OnBaseConnection");
+if (string.IsNullOrEmpty(connectionString))
+{
+    Log.Error("Connection string 'OnBaseConnection' not found in configuration!");
+}
+else
+{
+    // Log connection string without password
+    var safeConnectionString = System.Text.RegularExpressions.Regex.Replace(
+        connectionString,
+        @"(Password|Pwd)=[^;]*",
+        "$1=***");
+    Log.Information("Database Connection String: {ConnectionString}", safeConnectionString);
+}
 
 // Add services to the container
 builder.Services.AddControllers();
@@ -50,6 +72,9 @@ builder.Services.AddCors(options =>
 
 var app = builder.Build();
 
+Log.Information("Application built successfully");
+Log.Information("Configuring HTTP request pipeline...");
+
 // Configure the HTTP request pipeline
 app.UseSwagger();
 app.UseSwaggerUI(c =>
@@ -65,7 +90,16 @@ app.UseCors("AllowAll");
 app.UseAuthorization();
 app.MapControllers();
 
-Log.Information("Application started successfully");
+Log.Information("========================================");
+Log.Information("Application configured successfully");
+Log.Information("Listening on: {Urls}", string.Join(", ", app.Urls));
+Log.Information("Swagger UI: /swagger");
+Log.Information("API Endpoint: /api/chatbot/query");
+Log.Information("Health Check: /api/chatbot/health");
+Log.Information("DB Test: /api/chatbot/dbtest");
+Log.Information("========================================");
+Log.Information("Application is ready to accept requests");
+
 app.Run();
 }
 catch (Exception ex)
