@@ -1,7 +1,23 @@
 using Chatbot_Onbase.Data;
 using Chatbot_Onbase.Services;
+using Serilog;
+
+// Configure Serilog
+Log.Logger = new LoggerConfiguration()
+    .ReadFrom.Configuration(new ConfigurationBuilder()
+        .SetBasePath(Directory.GetCurrentDirectory())
+        .AddJsonFile("appsettings.json")
+        .Build())
+    .CreateLogger();
+
+try
+{
+    Log.Information("Starting Onbase Invoice Chatbot application");
 
 var builder = WebApplication.CreateBuilder(args);
+
+// Add Serilog
+builder.Host.UseSerilog();
 
 // Add services to the container
 builder.Services.AddControllers();
@@ -49,5 +65,15 @@ app.UseCors("AllowAll");
 app.UseAuthorization();
 app.MapControllers();
 
+Log.Information("Application started successfully");
 app.Run();
+}
+catch (Exception ex)
+{
+    Log.Fatal(ex, "Application terminated unexpectedly");
+}
+finally
+{
+    Log.CloseAndFlush();
+}
 

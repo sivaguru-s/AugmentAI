@@ -18,11 +18,13 @@ public interface IOnbaseRepository
 public class OnbaseRepository : IOnbaseRepository
 {
     private readonly string _connectionString;
+    private readonly ILogger<OnbaseRepository> _logger;
 
-    public OnbaseRepository(IConfiguration configuration)
+    public OnbaseRepository(IConfiguration configuration, ILogger<OnbaseRepository> logger)
     {
-        _connectionString = configuration.GetConnectionString("OnBaseConnection") 
+        _connectionString = configuration.GetConnectionString("OnBaseConnection")
             ?? throw new ArgumentNullException("OnBaseConnection not found in configuration");
+        _logger = logger;
     }
 
     private SqlConnection GetConnection() => new SqlConnection(_connectionString);
@@ -162,10 +164,12 @@ public class OnbaseRepository : IOnbaseRepository
 
     public async Task<List<Invoice>> GetInvoicesByVendorAsync(string vendorName)
     {
+        _logger.LogInformation("Searching invoices for vendor: {VendorName}", vendorName);
         using var connection = GetConnection();
 
         // Check if this looks like a vendor code (starts with V followed by numbers)
         bool isVendorCode = System.Text.RegularExpressions.Regex.IsMatch(vendorName, @"^V\d+$");
+        _logger.LogDebug("Vendor search type: {SearchType}", isVendorCode ? "VendorCode" : "VendorName");
 
         string query;
         if (isVendorCode)
@@ -286,7 +290,14 @@ public class OnbaseRepository : IOnbaseRepository
                 ORDER BY AmountSort, InvoiceDate DESC";
         }
 
-        return (await connection.QueryAsync<Invoice>(query, new { VendorName = vendorName }, commandTimeout: 120)).ToList();
+        var startTime = DateTime.UtcNow;
+        var results = (await connection.QueryAsync<Invoice>(query, new { VendorName = vendorName }, commandTimeout: 120)).ToList();
+        var duration = (DateTime.UtcNow - startTime).TotalMilliseconds;
+
+        _logger.LogInformation("Found {Count} invoices for vendor {VendorName} in {Duration}ms",
+            results.Count, vendorName, duration);
+
+        return results;
     }
 
     public async Task<List<Invoice>> GetInvoicesByNumberAsync(string invoiceNumber, string documentType = "all")

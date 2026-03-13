@@ -42,6 +42,9 @@ bld/
 *.svclog
 *.scc
 
+# Application Logs
+Logs/
+
 # Rider
 .idea/
 *.sln.iml
