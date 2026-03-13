@@ -3,6 +3,7 @@ using Chatbot_Onbase.Models;
 using Chatbot_Onbase.Services;
 using Chatbot_Onbase.Data;
 using Microsoft.Data.SqlClient;
+using Serilog;
 
 namespace Chatbot_Onbase.Controllers;
 
