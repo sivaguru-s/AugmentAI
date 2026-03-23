@@ -33,7 +33,7 @@ if (string.IsNullOrEmpty(connectionString))
 }
 else
 {
-    // Log connection string without password
+    // Log connection string without sensitive data
     var safeConnectionString = System.Text.RegularExpressions.Regex.Replace(
         connectionString,
         @"(Password|Pwd)=[^;]*",

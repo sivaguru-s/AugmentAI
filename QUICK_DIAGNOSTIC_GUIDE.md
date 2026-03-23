@@ -45,7 +45,7 @@ http://localhost/chatbotonbase/api/chatbot/dbtest
 ```json
 {
   "status": "connected",
-  "server": "AE1DCVPSQ23407",
+  "server": "aazeus-obdmsq01",
   "database": "Onbase",
   "serverVersion": "15.00.4445",
   "connectionTimeMs": 123.45
@@ -59,7 +59,7 @@ http://localhost/chatbotonbase/api/chatbot/dbtest
   "error": "Login failed for user...",
   "errorNumber": 18456,
   "state": 1,
-  "server": "AE1DCVPSQ23407"
+  "server": "aazeus-obdmsq01"
 }
 ```
 
@@ -79,7 +79,7 @@ Look for startup messages:
 ```
 [INF] Starting Onbase Invoice Chatbot application
 [INF] Environment: Production
-[INF] Database Connection String: Server=AE1DCVPSQ23407;...
+[INF] Database Connection String: Server=aazeus-obdmsq01;...
 [INF] Application is ready to accept requests
 ```
 
@@ -113,7 +113,7 @@ Type: SqlException
 **Quick Test:**
 ```powershell
 # From IIS server
-sqlcmd -S AE1DCVPSQ23407 -d Onbase -E -Q "SELECT @@VERSION"
+sqlcmd -S aazeus-obdmsq01 -d Onbase -E -Q "SELECT @@VERSION"
 ```
 
 **Fix:**
@@ -152,8 +152,8 @@ Time: 3/13/2026, 12:00:00 PM
 
 ### Log File Error Format
 ```
-[ERR] Database error processing query: show all invoices. 
-Error Number: 53, State: 0, Server: AE1DCVPSQ23407
+[ERR] Database error processing query: show all invoices.
+Error Number: 53, State: 0, Server: aazeus-obdmsq01
 System.Data.SqlClient.SqlException: A network-related error...
    at Chatbot_Onbase.Data.OnbaseRepository...
 ```

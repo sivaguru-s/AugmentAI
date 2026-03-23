@@ -23,7 +23,7 @@ Added comprehensive logging and diagnostic features to help troubleshoot IIS dep
 - Tests database connectivity
 - Measures connection time
 - Returns server version and database name
-- Provides detailed SQL error information on failure
+- Provides detailed error information on failure
 
 #### Enhanced Logging
 - Logs client IP address for all requests
@@ -95,7 +95,7 @@ Frontend now shows:
   "error": "Login failed for user...",
   "errorNumber": 18456,
   "state": 1,
-  "server": "AE1DCVPSQ23407",
+  "server": "aazeus-obdmsq01",
   "timestamp": "2026-03-13T12:00:00Z"
 }
 ```
@@ -111,7 +111,7 @@ Frontend now shows:
 [INF] OS: Microsoft Windows NT 10.0.17763.0
 [INF] Current Directory: C:\inetpub\wwwroot\ChatbotOnbase
 ========================================
-[INF] Database Connection String: Server=AE1DCVPSQ23407;Database=Onbase;...
+[INF] Database Connection String: Server=aazeus-obdmsq01;Database=Onbase;...
 [INF] Application built successfully
 [INF] Configuring HTTP request pipeline...
 ========================================
@@ -138,7 +138,7 @@ Frontend now shows:
 
 ### Error Logs
 ```
-[ERR] Database error processing query: show all invoices. Error Number: 53, State: 0, Server: AE1DCVPSQ23407
+[ERR] Database error processing query: show all invoices. Error Number: 53, State: 0, Server: aazeus-obdmsq01
 System.Data.SqlClient.SqlException (0x80131904): A network-related or instance-specific error occurred while establishing a connection to SQL Server...
    at Chatbot_Onbase.Data.OnbaseRepository.GetAllInvoicesAsync(Int32 limit, String documentType)
    at Chatbot_Onbase.Services.ChatbotService.ProcessQueryAsync(String userPrompt)
@@ -158,7 +158,7 @@ Health Status: 200
 Health Data: {status: "healthy", timestamp: "2026-03-13T12:00:00Z", ...}
 Testing database connection...
 DB Test Status: 200
-DB Test Data: {status: "connected", server: "AE1DCVPSQ23407", ...}
+DB Test Data: {status: "connected", server: "aazeus-obdmsq01", ...}
 === All Tests Passed ===
 ```
 

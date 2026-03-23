@@ -39,7 +39,7 @@ GET /api/chatbot/dbtest
 ```json
 {
   "status": "connected",
-  "server": "AE1DCVPSQ23407",
+  "server": "aazeus-obdmsq01",
   "database": "Onbase",
   "serverVersion": "15.00.4153",
   "connectionTimeMs": 123.45,
@@ -54,7 +54,7 @@ GET /api/chatbot/dbtest
   "error": "A network-related or instance-specific error...",
   "errorNumber": 53,
   "state": 0,
-  "server": "AE1DCVPSQ23407",
+  "server": "aazeus-obdmsq01",
   "timestamp": "2026-03-13T12:00:00Z"
 }
 ```
@@ -177,7 +177,7 @@ $response.Content | ConvertFrom-Json | Format-List
    ```
 3. Test connection from IIS server:
    ```powershell
-   sqlcmd -S AE1DCVPSQ23407 -d Onbase -E -Q "SELECT @@VERSION"
+   sqlcmd -S aazeus-obdmsq01 -d Onbase -E -Q "SELECT @@VERSION"
    ```
 
 ### Issue 3: API URL Not Found (404)
@@ -209,7 +209,7 @@ $response.Content | ConvertFrom-Json | Format-List
 Look for these entries to confirm successful startup:
 ```
 [INF] Starting Onbase Invoice Chatbot application
-[INF] Database Connection String: Server=AE1DCVPSQ23407;...
+[INF] Database Connection String: Server=aazeus-obdmsq01;...
 [INF] Application configured successfully
 [INF] Application is ready to accept requests
 ```
@@ -227,7 +227,7 @@ Successful query pattern:
 ### Error Logs
 Database error example:
 ```
-[ERR] Database error processing query: show all invoices. Error Number: 53, State: 0, Server: AE1DCVPSQ23407
+[ERR] Database error processing query: show all invoices. Error Number: 53, State: 0, Server: aazeus-obdmsq01
 System.Data.SqlClient.SqlException: A network-related or instance-specific error...
 ```
 

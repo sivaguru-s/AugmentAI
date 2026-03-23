@@ -45,6 +45,12 @@ bld/
 # Application Logs
 Logs/
 
+# Configuration files with sensitive data
+appsettings.Production.json
+appsettings.Staging.json
+appsettings.*.json
+!appsettings.Development.json
+
 # Rider
 .idea/
 *.sln.iml
