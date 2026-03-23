@@ -17,6 +17,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Cleaned up SQL authentication code from Program.cs
 
 ### Added
+- 2026-03-23 - docs/USER_GUIDE.md - Created comprehensive user guide with business context and NLP flow diagrams
+  - Added business context explaining Finance AP invoice upload process via Kofax to Onbase
+  - Documented POC chatbot solution for Finance team's invoice analytics needs
+  - Created detailed NLP processing flow diagrams using Mermaid
+  - Added two real-world example use cases with sequence diagrams:
+    * Example 1: Vendor search with year range (SUPREME GRAPHICS 2025/2026)
+    * Example 2: Vendor search with relative date (GOOGLE last one month)
+  - Documented supported query patterns (vendor, date, amount, status)
+  - Added technical implementation details (NLP components, database schema)
+  - Included API reference, security compliance, and performance metrics
+- 2026-03-23 - README.md - Enhanced with business context and real-world examples
+  - Added Finance department context and Kofax integration explanation
+  - Included link to comprehensive User Guide
+  - Added real-world query examples from Finance team use cases
 - 2026-03-23 - Tests/ - Created comprehensive test infrastructure (`.augment` rules compliance)
   - Created xUnit test project targeting .NET 8.0
   - Added unit tests for InvoiceQueryParser (9 test cases covering NLP parsing logic)

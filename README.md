@@ -2,6 +2,14 @@
 
 An intelligent chatbot that searches and retrieves invoice information from Onbase SQL database using natural language queries - **no API key authentication required**.
 
+## Business Context
+
+The Finance Accounting department at Ashley Furniture Industries uses a service to upload Accounts Payable (AP) invoices to the **Onbase system** (a comprehensive document management system). Vendor invoices are automatically uploaded to Onbase through various vendor systems, with **Kofax** being the primary integration platform.
+
+This chatbot was developed as a **Proof of Concept (POC)** in response to an internal request from the Finance team for an intelligent search solution. The chatbot communicates directly with the Onbase database and processes natural language queries to fetch invoice analytics and information in real-time.
+
+**📖 For detailed documentation, see [User Guide](docs/USER_GUIDE.md)**
+
 ## Features
 
 - 🤖 **AI-Powered Natural Language Processing** - Uses pattern matching and intent detection (no external API keys needed)
@@ -61,9 +69,24 @@ The connection string is configured in `appsettings.json`:
 
 The chatbot understands natural language queries such as:
 
+### Real-World Examples
+
+**Example 1: Vendor Search with Year Range**
+```
+fetch invoices for the vendor "SUPREME GRAPHICS" to see 2025/2026 invoices
+```
+*Returns all invoices for SUPREME GRAPHICS from January 2025 through December 2026*
+
+**Example 2: Vendor Search with Relative Date**
+```
+fetch invoices for the vendor "GOOGLE" to see last one month invoices
+```
+*Returns all GOOGLE invoices from the past 30 days*
+
 ### Search by Vendor
 - "Show me all invoices from vendor ABC Corp"
 - "Find invoices from supplier XYZ Company"
+- "Get invoices for SUPREME GRAPHICS"
 
 ### Search by Invoice Number
 - "Find invoice number INV-12345"
