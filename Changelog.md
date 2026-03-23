@@ -17,6 +17,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Cleaned up SQL authentication code from Program.cs
 
 ### Added
+- 2026-03-23 - docs/USER_GUIDE.html - Created interactive HTML version of user guide
+  - Professional responsive design with gradient header and smooth navigation
+  - Embedded Mermaid.js for interactive diagram rendering
+  - Color-coded sections (business context, architecture, NLP, examples, API, security)
+  - Styled code blocks with syntax highlighting
+  - Interactive navigation with smooth scrolling
+  - Print-friendly CSS for documentation export
+  - Mobile-responsive layout
 - 2026-03-23 - docs/USER_GUIDE.md - Created comprehensive user guide with business context and NLP flow diagrams
   - Added business context explaining Finance AP invoice upload process via Kofax to Onbase
   - Documented POC chatbot solution for Finance team's invoice analytics needs

@@ -1,0 +1,811 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Onbase Invoice Chatbot - User Guide</title>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            overflow: hidden;
+        }
+
+        header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 40px;
+            text-align: center;
+        }
+
+        header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        header p {
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+
+        nav {
+            background: #f8f9fa;
+            padding: 20px 40px;
+            border-bottom: 2px solid #e9ecef;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        nav ul {
+            list-style: none;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+
+        nav a {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 600;
+            transition: color 0.3s;
+        }
+
+        nav a:hover {
+            color: #764ba2;
+        }
+
+        .content {
+            padding: 40px;
+        }
+
+        section {
+            margin-bottom: 50px;
+        }
+
+        h2 {
+            color: #667eea;
+            font-size: 2em;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 3px solid #667eea;
+        }
+
+        h3 {
+            color: #764ba2;
+            font-size: 1.5em;
+            margin: 30px 0 15px 0;
+        }
+
+        h4 {
+            color: #555;
+            font-size: 1.2em;
+            margin: 20px 0 10px 0;
+        }
+
+        p {
+            margin-bottom: 15px;
+            text-align: justify;
+        }
+
+        .highlight-box {
+            background: #f8f9fa;
+            border-left: 4px solid #667eea;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 5px;
+        }
+
+        .example-box {
+            background: #e7f3ff;
+            border: 2px solid #2196F3;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+        }
+
+        .prompt {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 15px;
+            margin: 15px 0;
+            font-family: 'Courier New', monospace;
+            font-size: 1.1em;
+            border-radius: 5px;
+        }
+
+        .response {
+            background: #d4edda;
+            border-left: 4px solid #28a745;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 5px;
+        }
+
+        pre {
+            background: #2d2d2d;
+            color: #f8f8f2;
+            padding: 20px;
+            border-radius: 5px;
+            overflow-x: auto;
+            margin: 15px 0;
+        }
+
+        code {
+            font-family: 'Courier New', monospace;
+            background: #f4f4f4;
+            padding: 2px 6px;
+            border-radius: 3px;
+            color: #e83e8c;
+        }
+
+        pre code {
+            background: transparent;
+            color: #f8f8f2;
+            padding: 0;
+        }
+
+        ul, ol {
+            margin-left: 30px;
+            margin-bottom: 15px;
+        }
+
+        li {
+            margin-bottom: 8px;
+        }
+
+        .mermaid {
+            background: white;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+            border: 1px solid #e9ecef;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border: 1px solid #ddd;
+        }
+
+        th {
+            background: #667eea;
+            color: white;
+        }
+
+        tr:nth-child(even) {
+            background: #f8f9fa;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 0.9em;
+            font-weight: 600;
+            margin: 5px;
+        }
+
+        .badge-primary {
+            background: #667eea;
+            color: white;
+        }
+
+        .badge-success {
+            background: #28a745;
+            color: white;
+        }
+
+        .badge-info {
+            background: #17a2b8;
+            color: white;
+        }
+
+        footer {
+            background: #2d2d2d;
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        @media print {
+            body {
+                background: white;
+                padding: 0;
+            }
+            nav {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🤖 Onbase Invoice Chatbot</h1>
+            <p>Comprehensive User Guide</p>
+        </header>
+
+        <nav>
+            <ul>
+                <li><a href="#business-context">Business Context</a></li>
+                <li><a href="#architecture">Architecture</a></li>
+                <li><a href="#nlp-processing">NLP Processing</a></li>
+                <li><a href="#examples">Examples</a></li>
+                <li><a href="#query-patterns">Query Patterns</a></li>
+                <li><a href="#api-reference">API Reference</a></li>
+                <li><a href="#security">Security</a></li>
+            </ul>
+        </nav>
+
+        <div class="content">
+            <!-- Business Context Section -->
+            <section id="business-context">
+                <h2>📋 Business Context</h2>
+
+                <h3>Overview</h3>
+                <p>The Finance Accounting department at Ashley Furniture Industries uses a service to upload Accounts Payable (AP) invoices to the <strong>Onbase system</strong>, which is a comprehensive document management system. Vendor invoices are automatically uploaded to Onbase through various vendor systems, with <strong>Kofax</strong> being the primary integration platform.</p>
+
+                <h3>Business Need</h3>
+                <p>The Finance team requested an intelligent chatbot solution to search and analyze invoice information through natural language prompts. This eliminates the need for manual database queries and provides quick access to invoice analytics.</p>
+
+                <h3>Solution</h3>
+                <div class="highlight-box">
+                    <p>We built a <strong>Proof of Concept (POC)</strong> chatbot that:</p>
+                    <ul>
+                        <li>Communicates directly with the Onbase database</li>
+                        <li>Processes natural language queries using custom NLP</li>
+                        <li>Fetches and analyzes invoice data in real-time</li>
+                        <li>Returns results in a conversational format</li>
+                    </ul>
+                </div>
+            </section>
+
+            <!-- System Architecture Section -->
+            <section id="architecture">
+                <h2>🏗️ System Architecture</h2>
+
+                <h3>Data Flow</h3>
+                <div class="mermaid">
+graph LR
+    A[Vendor Systems] -->|Upload Invoices| B[Kofax]
+    B -->|Process & Store| C[Onbase DMS]
+    C -->|SQL Database| D[Onbase SQL Server]
+    D -->|Query| E[Invoice Chatbot API]
+    E -->|Results| F[Finance Team Users]
+
+    style A fill:#e1f5ff
+    style B fill:#fff4e1
+    style C fill:#e8f5e9
+    style D fill:#f3e5f5
+    style E fill:#fce4ec
+    style F fill:#e0f2f1
+                </div>
+
+                <h3>System Components</h3>
+                <ol>
+                    <li><strong>Vendor Systems</strong> - External vendor invoice submission systems</li>
+                    <li><strong>Kofax</strong> - Document capture and processing platform</li>
+                    <li><strong>Onbase DMS</strong> - Document Management System storing all invoices</li>
+                    <li><strong>Onbase SQL Server</strong> - Database backend (aazeus-obdmsq01)</li>
+                    <li><strong>Invoice Chatbot API</strong> - ASP.NET Core 8.0 Web API with NLP</li>
+                    <li><strong>Web Interface</strong> - User-friendly chat interface for Finance team</li>
+                </ol>
+            </section>
+
+            <!-- NLP Processing Section -->
+            <section id="nlp-processing">
+                <h2>🧠 How NLP Processing Works</h2>
+
+                <h3>Query Processing Pipeline</h3>
+                <div class="mermaid">
+graph TD
+    A[User enters natural language query] --> B[InvoiceQueryParser]
+    B --> C{Intent Detection}
+    C -->|Vendor Search| D[Extract Vendor Name]
+    C -->|Date Range| E[Extract Date Parameters]
+    C -->|Amount Range| F[Extract Amount Values]
+    C -->|Status Search| G[Extract Status Keywords]
+    C -->|Invoice Number| H[Extract Invoice ID]
+
+    D --> I[Build SQL Query]
+    E --> I
+    F --> I
+    G --> I
+    H --> I
+
+    I --> J[OnbaseRepository]
+    J --> K[Execute Parameterized Query]
+    K --> L[Onbase Database]
+    L --> M[Return Results]
+    M --> N[Format Response]
+    N --> O[Display to User]
+
+    style A fill:#e3f2fd
+    style B fill:#fff3e0
+    style C fill:#f3e5f5
+    style I fill:#e8f5e9
+    style L fill:#fce4ec
+    style O fill:#e0f2f1
+                </div>
+
+                <h3>NLP Analysis Steps</h3>
+                <ol>
+                    <li><strong>Tokenization</strong> - Break query into words and phrases</li>
+                    <li><strong>Intent Detection</strong> - Identify what the user wants (vendor search, date filter, etc.)</li>
+                    <li><strong>Entity Extraction</strong> - Extract key parameters:
+                        <ul>
+                            <li>Vendor names (using quotes or keywords)</li>
+                            <li>Date ranges (relative: "last month", "2025/2026" or absolute dates)</li>
+                            <li>Amount ranges (greater than, less than, between)</li>
+                            <li>Status keywords (pending, approved, paid)</li>
+                            <li>Invoice/PO numbers</li>
+                        </ul>
+                    </li>
+                    <li><strong>Query Construction</strong> - Build SQL query with extracted parameters</li>
+                    <li><strong>Execution</strong> - Run parameterized query against Onbase database</li>
+                    <li><strong>Response Formatting</strong> - Convert results to natural language</li>
+                </ol>
+            </section>
+
+            <!-- Examples Section -->
+            <section id="examples">
+                <h2>💡 Example Use Cases</h2>
+
+                <!-- Example 1 -->
+                <div class="example-box">
+                    <h3>Example 1: Vendor Search with Year Range</h3>
+
+                    <h4>User Prompt:</h4>
+                    <div class="prompt">
+                        fetch invoices for the vendor "SUPREME GRAPHICS" to see 2025/2026 invoices
+                    </div>
+
+                    <h4>NLP Processing Flow:</h4>
+                    <div class="mermaid">
+sequenceDiagram
+    participant U as User
+    participant P as InvoiceQueryParser
+    participant S as ChatbotService
+    participant R as OnbaseRepository
+    participant DB as Onbase Database
+
+    U->>P: "fetch invoices for vendor SUPREME GRAPHICS to see 2025/2026 invoices"
+
+    Note over P: Step 1: Detect Intent
+    P->>P: Intent = VENDOR_SEARCH + DATE_RANGE
+
+    Note over P: Step 2: Extract Entities
+    P->>P: Vendor = "SUPREME GRAPHICS"
+    P->>P: StartDate = 2025-01-01
+    P->>P: EndDate = 2026-12-31
+
+    P->>S: QueryParams(vendor, startDate, endDate)
+    S->>R: SearchInvoices(params)
+
+    Note over R: Build SQL Query
+    R->>R: SELECT * FROM hsi.ItemData<br/>WHERE VendorName LIKE '%SUPREME GRAPHICS%'<br/>AND InvoiceDate BETWEEN '2025-01-01' AND '2026-12-31'
+
+    R->>DB: Execute Query
+    DB-->>R: Return 15 invoices
+    R-->>S: Invoice[]
+    S-->>U: "I found 15 invoice(s) for SUPREME GRAPHICS<br/>from 2025 to 2026..."
+                    </div>
+
+                    <h4>Extracted Parameters:</h4>
+                    <ul>
+                        <li><strong>Intent:</strong> Vendor Search + Date Range Filter</li>
+                        <li><strong>Vendor Name:</strong> "SUPREME GRAPHICS"</li>
+                        <li><strong>Start Date:</strong> January 1, 2025</li>
+                        <li><strong>End Date:</strong> December 31, 2026</li>
+                    </ul>
+
+                    <h4>SQL Query Generated:</h4>
+                    <pre><code>SELECT TOP 100
+    ItemNum, InvoiceNumber, VendorName, Amount,
+    InvoiceDate, DueDate, Status, PONumber, Description
+FROM hsi.ItemData itd
+INNER JOIN hsi.ItemTypeGroup itg ON itd.ItemTypeGroupNum = itg.ItemTypeGroupNum
+WHERE VendorName LIKE '%SUPREME GRAPHICS%'
+  AND InvoiceDate >= '2025-01-01'
+  AND InvoiceDate <= '2026-12-31'
+ORDER BY InvoiceDate DESC</code></pre>
+
+                    <h4>Response:</h4>
+                    <div class="response">
+                        <p><strong>I found 15 invoice(s) for vendor "SUPREME GRAPHICS" from 2025 to 2026.</strong></p>
+                        <p><strong>Invoice Details:</strong></p>
+                        <ol>
+                            <li>Invoice #INV-2025-001 - $12,500.00 - Date: 2025-03-15 - Status: Paid</li>
+                            <li>Invoice #INV-2025-045 - $8,750.00 - Date: 2025-06-22 - Status: Approved</li>
+                            <li>Invoice #INV-2026-012 - $15,200.00 - Date: 2026-01-10 - Status: Pending</li>
+                            <li>...</li>
+                        </ol>
+                    </div>
+                </div>
+
+                <!-- Example 2 -->
+                <div class="example-box">
+                    <h3>Example 2: Vendor Search with Relative Date Range</h3>
+
+                    <h4>User Prompt:</h4>
+                    <div class="prompt">
+                        fetch invoices for the vendor "GOOGLE" to see last one month invoices
+                    </div>
+
+                    <h4>NLP Processing Flow:</h4>
+                    <div class="mermaid">
+sequenceDiagram
+    participant U as User
+    participant P as InvoiceQueryParser
+    participant S as ChatbotService
+    participant R as OnbaseRepository
+    participant DB as Onbase Database
+
+    U->>P: "fetch invoices for vendor GOOGLE to see last one month invoices"
+
+    Note over P: Step 1: Detect Intent
+    P->>P: Intent = VENDOR_SEARCH + RELATIVE_DATE
+
+    Note over P: Step 2: Extract Entities
+    P->>P: Vendor = "GOOGLE"
+    P->>P: RelativeDate = "last one month"
+
+    Note over P: Step 3: Calculate Date Range
+    P->>P: Today = 2026-03-23
+    P->>P: StartDate = 2026-02-23 (30 days ago)
+    P->>P: EndDate = 2026-03-23 (today)
+
+    P->>S: QueryParams(vendor, startDate, endDate)
+    S->>R: SearchInvoices(params)
+
+    Note over R: Build SQL Query
+    R->>R: SELECT * FROM hsi.ItemData<br/>WHERE VendorName LIKE '%GOOGLE%'<br/>AND InvoiceDate BETWEEN '2026-02-23' AND '2026-03-23'
+
+    R->>DB: Execute Query
+    DB-->>R: Return 8 invoices
+    R-->>S: Invoice[]
+    S-->>U: "I found 8 invoice(s) for GOOGLE<br/>from the last month..."
+                    </div>
+
+                    <h4>Extracted Parameters:</h4>
+                    <ul>
+                        <li><strong>Intent:</strong> Vendor Search + Relative Date Range</li>
+                        <li><strong>Vendor Name:</strong> "GOOGLE"</li>
+                        <li><strong>Relative Period:</strong> "last one month"</li>
+                        <li><strong>Calculated Start Date:</strong> 30 days before today (2026-02-23)</li>
+                        <li><strong>Calculated End Date:</strong> Today (2026-03-23)</li>
+                    </ul>
+
+                    <h4>SQL Query Generated:</h4>
+                    <pre><code>SELECT TOP 100
+    ItemNum, InvoiceNumber, VendorName, Amount,
+    InvoiceDate, DueDate, Status, PONumber, Description
+FROM hsi.ItemData itd
+INNER JOIN hsi.ItemTypeGroup itg ON itd.ItemTypeGroupNum = itg.ItemTypeGroupNum
+WHERE VendorName LIKE '%GOOGLE%'
+  AND InvoiceDate >= '2026-02-23'
+  AND InvoiceDate <= '2026-03-23'
+ORDER BY InvoiceDate DESC</code></pre>
+
+                    <h4>Response:</h4>
+                    <div class="response">
+                        <p><strong>I found 8 invoice(s) for vendor "GOOGLE" from the last month.</strong></p>
+                        <p><strong>Invoice Details:</strong></p>
+                        <ol>
+                            <li>Invoice #GOOG-2026-089 - $45,000.00 - Date: 2026-03-20 - Status: Pending</li>
+                            <li>Invoice #GOOG-2026-087 - $38,500.00 - Date: 2026-03-15 - Status: Approved</li>
+                            <li>Invoice #GOOG-2026-085 - $42,750.00 - Date: 2026-03-10 - Status: Paid</li>
+                            <li>Invoice #GOOG-2026-082 - $39,200.00 - Date: 2026-03-05 - Status: Paid</li>
+                            <li>Invoice #GOOG-2026-078 - $41,000.00 - Date: 2026-02-28 - Status: Paid</li>
+                            <li>Invoice #GOOG-2026-075 - $37,800.00 - Date: 2026-02-25 - Status: Paid</li>
+                            <li>...</li>
+                        </ol>
+                        <p><strong>Total Amount:</strong> $284,250.00</p>
+                        <p><strong>Average Invoice:</strong> $35,531.25</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Query Patterns Section -->
+            <section id="query-patterns">
+                <h2>🔍 Supported Query Patterns</h2>
+
+                <h3>Vendor Search Patterns</h3>
+                <ul>
+                    <li><code>"fetch invoices for vendor [NAME]"</code></li>
+                    <li><code>"show me [VENDOR] invoices"</code></li>
+                    <li><code>"find all invoices from [COMPANY]"</code></li>
+                    <li><code>"get [SUPPLIER] invoice data"</code></li>
+                </ul>
+
+                <h3>Date Range Patterns</h3>
+                <h4>Absolute Dates:</h4>
+                <ul>
+                    <li><code>"2025/2026 invoices"</code> - Covers both years</li>
+                    <li><code>"from 2025-01-01 to 2025-12-31"</code></li>
+                    <li><code>"between January 2025 and March 2025"</code></li>
+                </ul>
+
+                <h4>Relative Dates:</h4>
+                <ul>
+                    <li><code>"last month"</code> / <code>"last one month"</code> - Previous 30 days</li>
+                    <li><code>"last 3 months"</code> - Previous 90 days</li>
+                    <li><code>"last year"</code> - Previous 365 days</li>
+                    <li><code>"this month"</code> - Current month to date</li>
+                    <li><code>"this year"</code> - Current year to date</li>
+                    <li><code>"last week"</code> - Previous 7 days</li>
+                </ul>
+
+                <h3>Amount Range Patterns</h3>
+                <ul>
+                    <li><code>"greater than $5000"</code></li>
+                    <li><code>"less than $1000"</code></li>
+                    <li><code>"between $1000 and $10000"</code></li>
+                    <li><code>"over 5000"</code> / <code>"under 1000"</code></li>
+                </ul>
+
+                <h3>Status Patterns</h3>
+                <ul>
+                    <li><code>"pending invoices"</code></li>
+                    <li><code>"approved invoices"</code></li>
+                    <li><code>"paid invoices"</code></li>
+                    <li><code>"rejected invoices"</code></li>
+                </ul>
+
+                <h3>Combined Queries</h3>
+                <ul>
+                    <li><code>"show me pending invoices for GOOGLE from last month over $10000"</code></li>
+                    <li><code>"find approved invoices for SUPREME GRAPHICS in 2025 between $5000 and $50000"</code></li>
+                </ul>
+            </section>
+
+            <!-- API Reference Section -->
+            <section id="api-reference">
+                <h2>📡 API Reference</h2>
+
+                <h3>POST /api/chatbot/query</h3>
+                <p>Process a natural language query to search for invoices.</p>
+
+                <h4>Request:</h4>
+                <pre><code>{
+  "prompt": "fetch invoices for vendor GOOGLE to see last one month invoices"
+}</code></pre>
+
+                <h4>Response:</h4>
+                <pre><code>{
+  "answer": "I found 8 invoice(s) for vendor \"GOOGLE\" from the last month...",
+  "invoices": [
+    {
+      "invoiceId": 123456,
+      "invoiceNumber": "GOOG-2026-089",
+      "vendorName": "GOOGLE",
+      "amount": 45000.00,
+      "invoiceDate": "2026-03-20T00:00:00",
+      "dueDate": "2026-04-20T00:00:00",
+      "status": "Pending",
+      "poNumber": "PO-2026-1234",
+      "description": "Cloud Services - March 2026"
+    }
+  ],
+  "query": "fetch invoices for vendor GOOGLE to see last one month invoices",
+  "resultCount": 8
+}</code></pre>
+
+                <h3>Database Schema</h3>
+                <h4>Main Table: hsi.ItemData</h4>
+                <pre><code>CREATE TABLE hsi.ItemData (
+    ItemNum BIGINT PRIMARY KEY,
+    InvoiceNumber NVARCHAR(100),
+    VendorName NVARCHAR(255),
+    Amount DECIMAL(18,2),
+    InvoiceDate DATETIME,
+    DueDate DATETIME,
+    Status NVARCHAR(50),
+    PONumber NVARCHAR(100),
+    Description NVARCHAR(MAX),
+    CreatedDate DATETIME,
+    ItemTypeGroupNum INT
+)</code></pre>
+
+                <h4>Performance Indexes:</h4>
+                <ul>
+                    <li><code>IX_ItemData_VendorName</code> - Vendor name searches</li>
+                    <li><code>IX_ItemData_InvoiceDate</code> - Date range queries</li>
+                    <li><code>IX_ItemData_Status</code> - Status filtering</li>
+                    <li><code>IX_ItemData_Amount</code> - Amount range searches</li>
+                </ul>
+            </section>
+
+            <!-- Security Section -->
+            <section id="security">
+                <h2>🔒 Security & Compliance</h2>
+
+                <h3>Authentication</h3>
+                <ul>
+                    <li>Windows Integrated Security for database access</li>
+                    <li>No credentials stored in code or configuration</li>
+                    <li>App Pool identity: <code>s_ApiFinDBUserProd</code></li>
+                </ul>
+
+                <h3>Data Protection</h3>
+                <ul>
+                    <li>All queries use parameterized SQL (prevents SQL injection)</li>
+                    <li>Input validation on all API endpoints</li>
+                    <li>HTTPS encryption for data in transit</li>
+                    <li>Audit logging for all queries</li>
+                </ul>
+
+                <h3>Compliance</h3>
+                <ul>
+                    <li>Follows Ashley Furniture security standards</li>
+                    <li>Adheres to finance data access policies</li>
+                    <li>Maintains audit trail for compliance reporting</li>
+                </ul>
+
+                <h3>Performance Metrics</h3>
+                <table>
+                    <tr>
+                        <th>Metric</th>
+                        <th>Target</th>
+                    </tr>
+                    <tr>
+                        <td>Average Response Time</td>
+                        <td>&lt; 500ms</td>
+                    </tr>
+                    <tr>
+                        <td>Database Query Time</td>
+                        <td>&lt; 200ms</td>
+                    </tr>
+                    <tr>
+                        <td>NLP Processing Time</td>
+                        <td>&lt; 50ms</td>
+                    </tr>
+                    <tr>
+                        <td>Maximum Results</td>
+                        <td>100 invoices per query</td>
+                    </tr>
+                    <tr>
+                        <td>Concurrent Users</td>
+                        <td>50+</td>
+                    </tr>
+                </table>
+            </section>
+
+            <!-- Troubleshooting Section -->
+            <section id="troubleshooting">
+                <h2>🔧 Troubleshooting</h2>
+
+                <h3>Common Issues</h3>
+
+                <div class="highlight-box">
+                    <h4>1. No Results Found</h4>
+                    <ul>
+                        <li>Verify vendor name spelling</li>
+                        <li>Check date range is valid</li>
+                        <li>Ensure invoices exist in the specified period</li>
+                    </ul>
+                </div>
+
+                <div class="highlight-box">
+                    <h4>2. Slow Query Performance</h4>
+                    <ul>
+                        <li>Narrow date range</li>
+                        <li>Add more specific filters</li>
+                        <li>Check database indexes</li>
+                    </ul>
+                </div>
+
+                <div class="highlight-box">
+                    <h4>3. Connection Errors</h4>
+                    <ul>
+                        <li>Verify database server is accessible (aazeus-obdmsq01)</li>
+                        <li>Check Windows Authentication credentials</li>
+                        <li>Review firewall settings</li>
+                    </ul>
+                </div>
+            </section>
+
+            <!-- Future Enhancements Section -->
+            <section id="future">
+                <h2>🚀 Future Enhancements</h2>
+
+                <h3>Planned Features</h3>
+
+                <div class="highlight-box">
+                    <h4>1. Advanced Analytics</h4>
+                    <ul>
+                        <li>Spending trends by vendor</li>
+                        <li>Payment cycle analysis</li>
+                        <li>Duplicate invoice detection</li>
+                    </ul>
+                </div>
+
+                <div class="highlight-box">
+                    <h4>2. Export Capabilities</h4>
+                    <ul>
+                        <li>PDF reports</li>
+                        <li>Excel exports</li>
+                        <li>Email delivery</li>
+                    </ul>
+                </div>
+
+                <div class="highlight-box">
+                    <h4>3. Enhanced NLP</h4>
+                    <ul>
+                        <li>Multi-language support</li>
+                        <li>Fuzzy matching for vendor names</li>
+                        <li>Synonym recognition</li>
+                    </ul>
+                </div>
+
+                <div class="highlight-box">
+                    <h4>4. Integration</h4>
+                    <ul>
+                        <li>Power BI dashboards</li>
+                        <li>Email notifications</li>
+                        <li>Workflow automation</li>
+                    </ul>
+                </div>
+            </section>
+        </div>
+
+        <footer>
+            <p><strong>Copyright © 2025 Ashley Furniture Industries, Inc. All rights reserved.</strong></p>
+            <p>This software is proprietary and confidential. Unauthorized copying, distribution, or use of this software, via any medium, is strictly prohibited.</p>
+        </footer>
+    </div>
+
+    <script>
+        // Initialize Mermaid
+        mermaid.initialize({
+            startOnLoad: true,
+            theme: 'default',
+            securityLevel: 'loose',
+            flowchart: {
+                useMaxWidth: true,
+                htmlLabels: true,
+                curve: 'basis'
+            }
+        });
+
+        // Smooth scrolling for navigation links
+        document.querySelectorAll('nav a').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                target.scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'start'
+                });
+            });
+        });
+    </script>
+</body>
+</html>
+
