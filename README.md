@@ -187,5 +187,6 @@ Key fields:
 
 ## License
 
-This project is for internal use.
+**Copyright © 2025 Ashley Furniture Industries, Inc. All rights reserved.**
 
+This software is proprietary and confidential. Unauthorized copying, distribution, or use of this software, via any medium, is strictly prohibited.
