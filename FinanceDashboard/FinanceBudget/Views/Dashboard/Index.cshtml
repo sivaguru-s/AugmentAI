@@ -1,0 +1,765 @@
+@model DashboardViewModel
+@{
+    ViewData["Title"] = "Finance Dashboard";
+}
+
+@section Styles {
+    <!-- Select2 CSS for searchable dropdowns -->
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+    <link href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" rel="stylesheet" />
+}
+
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h1 class="display-4">Finance Budget Dashboard</h1>
+            <p class="lead">Integrated view of Unit Budget, AFE Data, and JIRA Costing</p>
+        </div>
+    </div>
+
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            @TempData["Error"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    <!-- Filter Section -->
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-body">
+                    <form method="get" asp-action="Index" id="filterForm">
+                        <div class="row g-3 align-items-end">
+                            <div class="col-md-4">
+                                <label for="unitCode" class="form-label">Select Unit:</label>
+                                <select class="form-select" id="unitCode" name="unitCode">
+                                    <option value="">-- All Units --</option>
+                                    @foreach (var unit in Model.AvailableUnits)
+                                    {
+                                        <option value="@unit.UnitCode"
+                                                selected="@(unit.UnitCode == ViewBag.SelectedUnit)">
+                                            @unit.UnitCode - @unit.UnitDescription
+                                        </option>
+                                    }
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <label for="natureId" class="form-label">Select Nature:</label>
+                                <select class="form-select" id="natureId" name="natureId"
+                                        disabled="@(string.IsNullOrEmpty(ViewBag.SelectedUnit))">
+                                    <option value="">-- All Natures --</option>
+                                    @foreach (var nature in Model.AvailableNatures)
+                                    {
+                                        <option value="@nature.NatureId"
+                                                selected="@(nature.NatureId == ViewBag.SelectedNature)">
+                                            @nature.NatureId - @nature.NatureDescription
+                                        </option>
+                                    }
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <button type="submit" class="btn btn-primary me-2">
+                                    <i class="bi bi-funnel"></i> Apply Filter
+                                </button>
+                                <a href="@Url.Action("Index")" class="btn btn-secondary me-2">
+                                    <i class="bi bi-x-circle"></i> Clear
+                                </a>
+                                <a href="@Url.Action("ExportData", new { unitCode = ViewBag.SelectedUnit, natureId = ViewBag.SelectedNature })"
+                                   class="btn btn-success" target="_blank">
+                                    <i class="bi bi-download"></i> Export
+                                </a>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    @if (!string.IsNullOrEmpty(ViewBag.SelectedUnit))
+    {
+        <!-- Summary Cards -->
+        <div class="row mb-4">
+            <!-- Unit Budget Credit/Debit Card -->
+            <div class="col-md-3">
+                <div class="card border-primary">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="card-title mb-0">Unit Budget Summary</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-2">
+                            <small class="text-muted">Credit (Positive)</small>
+                            <h4 class="text-success mb-0">$@Model.TotalBudgetCredit.ToString("N2")</h4>
+                        </div>
+                        <div class="mb-2">
+                            <small class="text-muted">Debit (Negative)</small>
+                            <h4 class="text-danger mb-0">$@Model.TotalBudgetDebit.ToString("N2")</h4>
+                        </div>
+                        <hr class="my-2">
+                        <div>
+                            <small class="text-muted">Net Total</small>
+                            <h4 class="mb-0 @(Model.TotalBudgetAmount >= 0 ? "text-success" : "text-danger")">
+                                $@Model.TotalBudgetAmount.ToString("N2")
+                            </h4>
+                        </div>
+                        <small class="text-muted d-block mt-2">AS400 Unit Budget</small>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-3">
+                <div class="card text-white bg-success">
+                    <div class="card-body">
+                        <h5 class="card-title">AFE Approved</h5>
+                        <h2 class="card-text">$@Model.TotalAFEApproved.ToString("N2")</h2>
+                        <small>ServiceNow AFE Data</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card text-white bg-warning">
+                    <div class="card-body">
+                        <h5 class="card-title">AFE Spent</h5>
+                        <h2 class="card-text">$@Model.TotalAFESpent.ToString("N2")</h2>
+                        <small>ServiceNow AFE Data</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card text-white bg-info">
+                    <div class="card-body">
+                        <h5 class="card-title">JIRA Estimated</h5>
+                        <h2 class="card-text">$@Model.TotalJiraEstimated.ToString("N2")</h2>
+                        <small>JIRA Costing</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- New: Planful and AFE Budget Summary Cards -->
+        <div class="row mb-4">
+            <div class="col-md-3">
+                <div class="card border-info">
+                    <div class="card-header bg-info text-white">
+                        <h5 class="card-title mb-0">Planful Budget</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-2">
+                            <small class="text-muted">Budget</small>
+                            <h4 class="text-primary mb-0">$@Model.TotalPlanfulBudget.ToString("N2")</h4>
+                        </div>
+                        <div class="mb-2">
+                            <small class="text-muted">Actual</small>
+                            <h4 class="text-success mb-0">$@Model.TotalPlanfulActual.ToString("N2")</h4>
+                        </div>
+                        <hr class="my-2">
+                        <div>
+                            <small class="text-muted">Variance</small>
+                            <h4 class="mb-0 @((Model.TotalPlanfulActual - Model.TotalPlanfulBudget) >= 0 ? "text-danger" : "text-success")">
+                                $@((Model.TotalPlanfulActual - Model.TotalPlanfulBudget).ToString("N2"))
+                            </h4>
+                        </div>
+                        <small class="text-muted d-block mt-2">Planful Data (DB2)</small>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-3">
+                <div class="card border-warning">
+                    <div class="card-header bg-warning text-dark">
+                        <h5 class="card-title mb-0">AFE Budget</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-2">
+                            <small class="text-muted">Approved</small>
+                            <h4 class="text-primary mb-0">$@Model.TotalAFEBudgetApproved.ToString("N2")</h4>
+                        </div>
+                        <div class="mb-2">
+                            <small class="text-muted">Committed</small>
+                            <h4 class="text-warning mb-0">$@Model.TotalAFEBudgetCommitted.ToString("N2")</h4>
+                        </div>
+                        <hr class="my-2">
+                        <div>
+                            <small class="text-muted">Remaining</small>
+                            <h4 class="mb-0 text-success">
+                                $@((Model.TotalAFEBudgetApproved - Model.TotalAFEBudgetCommitted).ToString("N2"))
+                            </h4>
+                        </div>
+                        <small class="text-muted d-block mt-2">AFE Budget (Excel)</small>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-3">
+                <div class="card text-white bg-secondary">
+                    <div class="card-body">
+                        <h5 class="card-title">Planful Forecast</h5>
+                        <h2 class="card-text">$@Model.TotalPlanfulForecast.ToString("N2")</h2>
+                        <small>Planful Forecast</small>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-3">
+                <div class="card text-white bg-dark">
+                    <div class="card-body">
+                        <h5 class="card-title">AFE Forecast</h5>
+                        <h2 class="card-text">$@Model.TotalAFEBudgetForecast.ToString("N2")</h2>
+                        <small>AFE Budget Forecast</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+    else
+    {
+        <!-- No Unit Selected Message -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="alert alert-info text-center" role="alert">
+                    <i class="bi bi-info-circle fs-1 d-block mb-3"></i>
+                    <h4 class="alert-heading">Welcome to Finance Budget Dashboard</h4>
+                    <p class="mb-0">Please select a <strong>Unit</strong> from the dropdown above to view budget data, AFE information, and JIRA costing details.</p>
+                </div>
+            </div>
+        </div>
+    }
+
+    <!-- Unit Summary Section -->
+    @if (Model.UnitSummaries.Any())
+    {
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h4>Unit-wise Summary</h4>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-striped table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Unit</th>
+                                        <th>Description</th>
+                                        <th>AS400 Budget</th>
+                                        <th>AFE Amount</th>
+                                        <th>JIRA Amount</th>
+                                        <th>Planful Budget</th>
+                                        <th>Planful Actual</th>
+                                        <th>AFE Budget Approved</th>
+                                        <th>AFE Budget Committed</th>
+                                        <th>Total Amount</th>
+                                        <th>Counts</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var summary in Model.UnitSummaries.Values)
+                                    {
+                                        <tr>
+                                            <td><strong>@summary.Unit</strong></td>
+                                            <td>@summary.UnitDescription</td>
+                                            <td>$@summary.BudgetAmount.ToString("N2")</td>
+                                            <td>$@summary.AFEAmount.ToString("N2")</td>
+                                            <td>$@summary.JiraAmount.ToString("N2")</td>
+                                            <td class="text-info">$@summary.PlanfulBudget.ToString("N2")</td>
+                                            <td class="text-success">$@summary.PlanfulActual.ToString("N2")</td>
+                                            <td class="text-primary">$@summary.AFEBudgetApproved.ToString("N2")</td>
+                                            <td class="text-warning">$@summary.AFEBudgetCommitted.ToString("N2")</td>
+                                            <td><strong>$@summary.TotalAmount.ToString("N2")</strong></td>
+                                            <td>
+                                                <small>
+                                                    Txn: @summary.TransactionCount<br/>
+                                                    AFE: @summary.AFECount<br/>
+                                                    JIRA: @summary.JiraIssueCount
+                                                </small>
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+
+    <!-- Business Vertical Summary Section -->
+    @if (Model.VerticalSummaries.Any())
+    {
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header bg-primary text-white">
+                        <h4 class="mb-0">Business Vertical Summary</h4>
+                        <small>Costs mapped to business verticals instead of individual cost centers</small>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-striped table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Vertical Code</th>
+                                        <th>Vertical Name</th>
+                                        <th>Total Budget</th>
+                                        <th>Total Actual</th>
+                                        <th>Total Forecast</th>
+                                        <th>Variance</th>
+                                        <th>Utilization %</th>
+                                        <th>Projects</th>
+                                        <th>Units</th>
+                                        <th>AFEs</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var vertical in Model.VerticalSummaries.Values.OrderByDescending(v => v.TotalBudget))
+                                    {
+                                        var varianceClass = vertical.TotalVariance >= 0 ? "text-danger" : "text-success";
+                                        var utilizationClass = vertical.UtilizationPercentage > 90 ? "text-danger" :
+                                                              vertical.UtilizationPercentage > 75 ? "text-warning" : "text-success";
+                                        <tr>
+                                            <td><strong>@vertical.VerticalCode</strong></td>
+                                            <td>@vertical.VerticalName</td>
+                                            <td>$@vertical.TotalBudget.ToString("N2")</td>
+                                            <td>$@vertical.TotalActual.ToString("N2")</td>
+                                            <td>$@vertical.TotalForecast.ToString("N2")</td>
+                                            <td class="@varianceClass">
+                                                $@vertical.TotalVariance.ToString("N2")
+                                                <small>(@vertical.VariancePercentage.ToString("N1")%)</small>
+                                            </td>
+                                            <td class="@utilizationClass">
+                                                <strong>@vertical.UtilizationPercentage.ToString("N1")%</strong>
+                                            </td>
+                                            <td>@vertical.ProjectCount</td>
+                                            <td>@vertical.UnitCount</td>
+                                            <td>@vertical.AFECount</td>
+                                        </tr>
+                                    }
+                                </tbody>
+                                <tfoot>
+                                    <tr class="table-secondary">
+                                        <td colspan="2"><strong>Total</strong></td>
+                                        <td><strong>$@Model.VerticalSummaries.Values.Sum(v => v.TotalBudget).ToString("N2")</strong></td>
+                                        <td><strong>$@Model.VerticalSummaries.Values.Sum(v => v.TotalActual).ToString("N2")</strong></td>
+                                        <td><strong>$@Model.VerticalSummaries.Values.Sum(v => v.TotalForecast).ToString("N2")</strong></td>
+                                        <td><strong>$@Model.VerticalSummaries.Values.Sum(v => v.TotalVariance).ToString("N2")</strong></td>
+                                        <td colspan="4"></td>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+
+    @if (!string.IsNullOrEmpty(ViewBag.SelectedUnit))
+    {
+        <!-- Detailed Data Tabs -->
+        <div class="row">
+            <div class="col-12">
+                <ul class="nav nav-tabs" id="dashboardTabs" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active" id="budget-tab" data-bs-toggle="tab" 
+                            data-bs-target="#budget" type="button" role="tab">
+                        Unit Budget (@Model.UnitBudgets.Count)
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="afe-tab" data-bs-toggle="tab" 
+                            data-bs-target="#afe" type="button" role="tab">
+                        AFE Data (@Model.AFEDataList.Count)
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="jira-tab" data-bs-toggle="tab"
+                            data-bs-target="#jira" type="button" role="tab">
+                        JIRA Costing (@Model.JiraCostings.Count)
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="afe-budget-tab" data-bs-toggle="tab"
+                            data-bs-target="#afe-budget" type="button" role="tab">
+                        AFE Budget (@Model.AFEBudgets.Count)
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="planful-tab" data-bs-toggle="tab"
+                            data-bs-target="#planful" type="button" role="tab">
+                        Planful Data (@Model.PlanfulIntegrationSummaries.Count)
+                    </button>
+                </li>
+            </ul>
+            <div class="tab-content" id="dashboardTabsContent">
+                <!-- Unit Budget Tab -->
+                <div class="tab-pane fade show active" id="budget" role="tabpanel">
+                    <div class="card">
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-sm table-hover" id="budgetTable">
+                                    <thead>
+                                        <tr>
+                                            <th>Unit</th>
+                                            <th>Unit Description</th>
+                                            <th>Nature</th>
+                                            <th>Nature Description</th>
+                                            <th>Transaction ID</th>
+                                            <th>Transaction Number</th>
+                                            <th>Amount</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach (var budget in Model.UnitBudgets)
+                                        {
+                                            <tr>
+                                                <td>@budget.Unit</td>
+                                                <td>@budget.UnitDescription</td>
+                                                <td>@budget.Nature</td>
+                                                <td>@budget.NatureDescription</td>
+                                                <td>@budget.TransactionId</td>
+                                                <td>@budget.TransactionNumber</td>
+                                                <td class="text-end">$@budget.Amount.ToString("N2")</td>
+                                            </tr>
+                                        }
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- AFE Data Tab -->
+                <div class="tab-pane fade" id="afe" role="tabpanel">
+                    <div class="card">
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-sm table-hover" id="afeTable">
+                                    <thead>
+                                        <tr>
+                                            <th>AFE Number</th>
+                                            <th>Unit</th>
+                                            <th>Description</th>
+                                            <th>Approved Amount</th>
+                                            <th>Spent Amount</th>
+                                            <th>Remaining Amount</th>
+                                            <th>Status</th>
+                                            <th>Approval Date</th>
+                                            <th>Requestor</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach (var afe in Model.AFEDataList)
+                                        {
+                                            <tr>
+                                                <td><strong>@afe.AFENumber</strong></td>
+                                                <td>@afe.Unit</td>
+                                                <td>@afe.Description</td>
+                                                <td class="text-end">$@afe.ApprovedAmount.ToString("N2")</td>
+                                                <td class="text-end">$@afe.SpentAmount.ToString("N2")</td>
+                                                <td class="text-end">$@afe.RemainingAmount.ToString("N2")</td>
+                                                <td>
+                                                    <span class="badge bg-@(afe.Status == "Approved" ? "success" : "warning")">
+                                                        @afe.Status
+                                                    </span>
+                                                </td>
+                                                <td>@afe.ApprovalDate?.ToString("yyyy-MM-dd")</td>
+                                                <td>@afe.Requestor</td>
+                                            </tr>
+                                        }
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- JIRA Costing Tab -->
+                <div class="tab-pane fade" id="jira" role="tabpanel">
+                    <div class="card">
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-sm table-hover" id="jiraTable">
+                                    <thead>
+                                        <tr>
+                                            <th>Issue Key</th>
+                                            <th>Unit</th>
+                                            <th>Summary</th>
+                                            <th>Status</th>
+                                            <th>Estimated Cost</th>
+                                            <th>Actual Cost</th>
+                                            <th>Assignee</th>
+                                            <th>Created Date</th>
+                                            <th>Due Date</th>
+                                            <th>Priority</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach (var jira in Model.JiraCostings)
+                                        {
+                                            <tr>
+                                                <td><strong>@jira.IssueKey</strong></td>
+                                                <td>@jira.Unit</td>
+                                                <td>@jira.Summary</td>
+                                                <td>
+                                                    <span class="badge bg-info">@jira.Status</span>
+                                                </td>
+                                                <td class="text-end">$@jira.EstimatedCost.ToString("N2")</td>
+                                                <td class="text-end">$@jira.ActualCost.ToString("N2")</td>
+                                                <td>@jira.Assignee</td>
+                                                <td>@jira.CreatedDate?.ToString("yyyy-MM-dd")</td>
+                                                <td>@jira.DueDate?.ToString("yyyy-MM-dd")</td>
+                                                <td>
+                                                    <span class="badge bg-@(jira.Priority == "High" ? "danger" : jira.Priority == "Medium" ? "warning" : "secondary")">
+                                                        @jira.Priority
+                                                    </span>
+                                                </td>
+                                            </tr>
+                                        }
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- AFE Budget Tab -->
+                <div class="tab-pane fade" id="afe-budget" role="tabpanel">
+                    <div class="card">
+                        <div class="card-header bg-warning">
+                            <h5 class="mb-0">AFE Budget Details</h5>
+                            <small>AFE budget information linked to unit nature costs</small>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-sm table-hover" id="afeBudgetTable">
+                                    <thead>
+                                        <tr>
+                                            <th>AFE Number</th>
+                                            <th>Project</th>
+                                            <th>Unit</th>
+                                            <th>Project Description</th>
+                                            <th>Owner</th>
+                                            <th>Approved Amount</th>
+                                            <th>Committed Amount</th>
+                                            <th>Forecast</th>
+                                            <th>Remaining</th>
+                                            <th>% Spent</th>
+                                            <th>Cap</th>
+                                            <th>Opex</th>
+                                            <th>Est. Completion</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach (var afeBudget in Model.AFEBudgets)
+                                        {
+                                            var remaining = afeBudget.RemainingAmount;
+                                            var remainingClass = remaining < 0 ? "text-danger" : "text-success";
+                                            var percentClass = afeBudget.PercentSpent > 90 ? "text-danger" : afeBudget.PercentSpent > 75 ? "text-warning" : "text-success";
+                                            <tr>
+                                                <td><strong>@afeBudget.AFENumber</strong></td>
+                                                <td>@afeBudget.Project</td>
+                                                <td>@afeBudget.Unit</td>
+                                                <td>@afeBudget.ProjectDescription</td>
+                                                <td>@afeBudget.Owner</td>
+                                                <td class="text-end">$@afeBudget.ApprovedAmount.ToString("N2")</td>
+                                                <td class="text-end">$@afeBudget.CommittedAmount.ToString("N2")</td>
+                                                <td class="text-end">$@afeBudget.Forecast.ToString("N2")</td>
+                                                <td class="text-end @remainingClass">
+                                                    <strong>$@remaining.ToString("N2")</strong>
+                                                </td>
+                                                <td class="text-end @percentClass">
+                                                    <strong>@afeBudget.PercentSpent.ToString("N1")%</strong>
+                                                </td>
+                                                <td class="text-end">$@afeBudget.Cap.ToString("N2")</td>
+                                                <td class="text-end">$@afeBudget.Opex.ToString("N2")</td>
+                                                <td>@afeBudget.EstimatedCompletion?.ToString("yyyy-MM-dd")</td>
+                                            </tr>
+                                        }
+                                    </tbody>
+                                    <tfoot>
+                                        <tr class="table-secondary">
+                                            <td colspan="5"><strong>Total</strong></td>
+                                            <td class="text-end"><strong>$@Model.AFEBudgets.Sum(a => a.ApprovedAmount).ToString("N2")</strong></td>
+                                            <td class="text-end"><strong>$@Model.AFEBudgets.Sum(a => a.CommittedAmount).ToString("N2")</strong></td>
+                                            <td class="text-end"><strong>$@Model.AFEBudgets.Sum(a => a.Forecast).ToString("N2")</strong></td>
+                                            <td class="text-end"><strong>$@Model.AFEBudgets.Sum(a => a.RemainingAmount).ToString("N2")</strong></td>
+                                            <td class="text-end"><strong>@(Model.AFEBudgets.Any() ? Model.AFEBudgets.Average(a => a.PercentSpent).ToString("N1") : "0.0")%</strong></td>
+                                            <td class="text-end"><strong>$@Model.AFEBudgets.Sum(a => a.Cap).ToString("N2")</strong></td>
+                                            <td class="text-end"><strong>$@Model.AFEBudgets.Sum(a => a.Opex).ToString("N2")</strong></td>
+                                            <td></td>
+                                        </tr>
+                                    </tfoot>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Planful Data Tab -->
+                <div class="tab-pane fade" id="planful" role="tabpanel">
+                    <div class="card">
+                        <div class="card-header bg-info text-white">
+                            <h5 class="mb-0">Planful Integration Summary</h5>
+                            <small>Nature-wise and unit-wise spend data from Planful (DB2)</small>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-sm table-hover" id="planfulTable">
+                                    <thead>
+                                        <tr>
+                                            <th>Unit</th>
+                                            <th>Nature</th>
+                                            <th>Year</th>
+                                            <th>Month</th>
+                                            <th>Budget</th>
+                                            <th>Actual</th>
+                                            <th>Forecast</th>
+                                            <th>Variance</th>
+                                            <th>Salary</th>
+                                            <th>Software</th>
+                                            <th>Hardware</th>
+                                            <th>Other</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach (var planful in Model.PlanfulIntegrationSummaries)
+                                        {
+                                            var varianceClass = planful.TotalVariance >= 0 ? "text-danger" : "text-success";
+                                            <tr>
+                                                <td><strong>@planful.Unit</strong></td>
+                                                <td>@planful.Nature</td>
+                                                <td>@planful.Year</td>
+                                                <td>@planful.Month</td>
+                                                <td class="text-end">$@planful.TotalBudget.ToString("N2")</td>
+                                                <td class="text-end">$@planful.TotalActual.ToString("N2")</td>
+                                                <td class="text-end">$@planful.TotalForecast.ToString("N2")</td>
+                                                <td class="text-end @varianceClass">
+                                                    $@planful.TotalVariance.ToString("N2")
+                                                </td>
+                                                <td class="text-end">$@planful.SalarySpend.ToString("N2")</td>
+                                                <td class="text-end">$@planful.SoftwareSpend.ToString("N2")</td>
+                                                <td class="text-end">$@planful.HardwareSpend.ToString("N2")</td>
+                                                <td class="text-end">$@planful.OtherSpend.ToString("N2")</td>
+                                            </tr>
+                                        }
+                                    </tbody>
+                                    <tfoot>
+                                        <tr class="table-secondary">
+                                            <td colspan="4"><strong>Total</strong></td>
+                                            <td class="text-end"><strong>$@Model.PlanfulIntegrationSummaries.Sum(p => p.TotalBudget).ToString("N2")</strong></td>
+                                            <td class="text-end"><strong>$@Model.PlanfulIntegrationSummaries.Sum(p => p.TotalActual).ToString("N2")</strong></td>
+                                            <td class="text-end"><strong>$@Model.PlanfulIntegrationSummaries.Sum(p => p.TotalForecast).ToString("N2")</strong></td>
+                                            <td class="text-end"><strong>$@Model.PlanfulIntegrationSummaries.Sum(p => p.TotalVariance).ToString("N2")</strong></td>
+                                            <td class="text-end"><strong>$@Model.PlanfulIntegrationSummaries.Sum(p => p.SalarySpend).ToString("N2")</strong></td>
+                                            <td class="text-end"><strong>$@Model.PlanfulIntegrationSummaries.Sum(p => p.SoftwareSpend).ToString("N2")</strong></td>
+                                            <td class="text-end"><strong>$@Model.PlanfulIntegrationSummaries.Sum(p => p.HardwareSpend).ToString("N2")</strong></td>
+                                            <td class="text-end"><strong>$@Model.PlanfulIntegrationSummaries.Sum(p => p.OtherSpend).ToString("N2")</strong></td>
+                                        </tr>
+                                    </tfoot>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    }
+</div>
+
+@section Scripts {
+    <!-- Select2 JS for searchable dropdowns -->
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+
+    <script>
+        $(document).ready(function() {
+            console.log('Dashboard loaded successfully');
+
+            // Initialize Select2 on Unit dropdown
+            $('#unitCode').select2({
+                theme: 'bootstrap-5',
+                placeholder: '-- All Units --',
+                allowClear: true,
+                width: '100%'
+            });
+
+            // Initialize Select2 on Nature dropdown
+            $('#natureId').select2({
+                theme: 'bootstrap-5',
+                placeholder: '-- All Natures --',
+                allowClear: true,
+                width: '100%'
+            });
+
+            // Handle unit dropdown change to load natures
+            $('#unitCode').on('change', function() {
+                var unitCode = $(this).val();
+                var natureDropdown = $('#natureId');
+
+                // Destroy Select2 before modifying options
+                natureDropdown.select2('destroy');
+
+                // Clear and disable nature dropdown
+                natureDropdown.empty();
+                natureDropdown.append('<option value="">-- All Natures --</option>');
+
+                if (unitCode) {
+                    // Enable and load natures for selected unit
+                    natureDropdown.prop('disabled', false);
+
+                    $.ajax({
+                        url: '@Url.Action("GetNaturesByUnit", "Dashboard")',
+                        type: 'GET',
+                        data: { unitCode: unitCode },
+                        success: function(data) {
+                            if (data && data.length > 0) {
+                                $.each(data, function(index, nature) {
+                                    natureDropdown.append(
+                                        $('<option></option>')
+                                            .val(nature.natureId)
+                                            .text(nature.natureId + ' - ' + nature.natureDescription)
+                                    );
+                                });
+                            }
+
+                            // Re-initialize Select2 after loading options
+                            natureDropdown.select2({
+                                theme: 'bootstrap-5',
+                                placeholder: '-- All Natures --',
+                                allowClear: true,
+                                width: '100%'
+                            });
+                        },
+                        error: function(xhr, status, error) {
+                            console.error('Error loading natures:', error);
+                            alert('Error loading natures for the selected unit.');
+
+                            // Re-initialize Select2 even on error
+                            natureDropdown.select2({
+                                theme: 'bootstrap-5',
+                                placeholder: '-- All Natures --',
+                                allowClear: true,
+                                width: '100%'
+                            });
+                        }
+                    });
+                } else {
+                    // Disable nature dropdown if no unit selected
+                    natureDropdown.prop('disabled', true);
+
+                    // Re-initialize Select2 for disabled state
+                    natureDropdown.select2({
+                        theme: 'bootstrap-5',
+                        placeholder: '-- All Natures --',
+                        allowClear: true,
+                        width: '100%'
+                    });
+                }
+            });
+        });
+    </script>
+}
+

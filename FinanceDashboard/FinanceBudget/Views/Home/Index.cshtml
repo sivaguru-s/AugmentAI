@@ -1,0 +1,41 @@
+﻿@{
+    ViewData["Title"] = "Home Page";
+}
+
+<div class="text-center">
+    <h1 class="display-4">Welcome to Finance Budget Dashboard</h1>
+    <p class="lead">Integrated Finance Analysis Platform</p>
+
+    <div class="row mt-5">
+        <div class="col-md-4">
+            <div class="card mb-4">
+                <div class="card-body">
+                    <h5 class="card-title">AS400 Unit Budget</h5>
+                    <p class="card-text">Access real-time budget data from AS400 system with detailed transaction information.</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card mb-4">
+                <div class="card-body">
+                    <h5 class="card-title">ServiceNow AFE Data</h5>
+                    <p class="card-text">View Authorization for Expenditure (AFE) data mapped to units from ServiceNow.</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card mb-4">
+                <div class="card-body">
+                    <h5 class="card-title">JIRA Unit Costing</h5>
+                    <p class="card-text">Track project costs and estimates from JIRA issues mapped to budget units.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="mt-4">
+        <a asp-controller="Dashboard" asp-action="Index" class="btn btn-primary btn-lg">
+            Go to Dashboard
+        </a>
+    </div>
+</div>

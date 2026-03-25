@@ -1,0 +1,24 @@
+{
+  "Logging": {
+    "LogLevel": {
+      "Default": "Information",
+      "Microsoft.AspNetCore": "Warning"
+    }
+  },
+  "ConnectionStrings": {
+    "AS400Database": "Server=YOUR_DEV_SERVER\\INSTANCE;Database=master;Integrated Security=true;TrustServerCertificate=true;"
+  },
+  "ServiceNow": {
+    "BaseUrl": "https://dev-instance.service-now.com",
+    "Username": "YOUR_DEV_USERNAME",
+    "Password": "YOUR_DEV_PASSWORD",
+    "AFETableName": "u_afe_data"
+  },
+  "Jira": {
+    "BaseUrl": "https://your-domain.atlassian.net",
+    "Username": "YOUR_DEV_EMAIL@company.com",
+    "ApiToken": "YOUR_DEV_API_TOKEN",
+    "ProjectKey": "FINANCE"
+  }
+}
+
