@@ -1,0 +1,160 @@
+// Ashley Direct Design System Variables
+$spacing: 15px;
+$font-size: 14px;
+$text-color: #333;
+$ashley-orange: #dc6902;
+$ashley-orange-hover: #b55800;
+$border-color: #787878;
+
+// Bootstrap Import
+@import "bootstrap/dist/css/bootstrap.min.css";
+
+// Angular Material Theme
+@import '@angular/material/prebuilt-themes/indigo-pink.css';
+
+// Base Styles - Matching Ashley Direct Home UX
+html, body {
+  -webkit-text-size-adjust: 100%;
+  font-family: 'Open Sans', sans-serif;
+}
+
+body {    
+  margin: 0;
+  font-size: $font-size;
+  color: $text-color;
+}
+
+.open-primarymenu .site-wrapper {
+  overflow: hidden;
+}
+
+ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  li {
+    box-sizing: border-box;
+  }
+}
+
+button, input, optgroup, select, textarea {
+  line-height: 1.15;
+}
+
+.padding-x {
+  padding-right: $spacing;
+  padding-left: $spacing;
+}
+
+.page-content {
+  padding-left: $spacing;
+  padding-right: $spacing;
+}
+
+.cursor-pointer {
+  cursor: pointer;
+}
+
+// Ashley Direct Orange Button
+.btn-adr {
+  background: $ashley-orange;
+  color: #fff;
+  width: 100%;
+  &:hover, &:active, &:visited {
+    color: #fff;
+    text-decoration: none;
+    box-shadow: none;
+    background: $ashley-orange-hover;
+  }
+}
+
+.link-action {
+  color: inherit;      
+}
+
+@media only screen and (max-width: 767px) {
+  .page-content {
+    padding-left: 0;
+    padding-right: 0;
+  }
+}
+
+.main-content {
+  max-width: 100%;
+}
+
+@media only screen and (min-width: 768px) {
+  .main-content {
+    max-width: calc(100% - 54px);
+  }
+  .open-primarymenu .main-content {
+    max-width: calc(100% - 259px);
+  }
+}
+
+// Custom Loader Style - Ashley Direct Pattern
+.epay-custom-loader {
+  background-color: rgb(241, 241, 241);
+  opacity: 0.7;
+  width: 100%;
+  height: 100%;
+  position: fixed;
+  overflow-y: scroll;
+  z-index: 1000;
+  top: 0;
+  left: 0;
+}
+
+.sk-wave {
+  font-size: 10px;
+  height: 40px;
+  margin: auto;
+  position: relative;
+  text-align: center;
+  top: 50%;
+  width: 50px;
+}
+
+.sk-wave .sk-rect {
+  animation: sk-waveStretchDelay 1.2s ease-in-out infinite;
+  display: inline-block;
+  height: 100%;
+  margin-right: 1px;
+  width: 6px;
+  background-color: $ashley-orange;
+}
+
+.sk-wave .sk-rect1 { animation-delay: -1.2s; }
+.sk-wave .sk-rect2 { animation-delay: -1.1s; }
+.sk-wave .sk-rect3 { animation-delay: -1s; }
+.sk-wave .sk-rect4 { animation-delay: -.9s; }
+.sk-wave .sk-rect5 { animation-delay: -.8s; }
+
+@keyframes sk-waveStretchDelay {
+  0%, 40%, 100% { transform: scaleY(0.4) }
+  20% { transform: scaleY(1.0) }
+}
+
+// Component Box
+.component-box {
+  min-height: 100px;
+  position: relative;
+}
+
+@media only screen and (max-width: 767px) {
+  .component-box {
+    min-height: 30px;
+  }
+}
+
+// Material overrides for Ashley branding
+.mat-mdc-raised-button.mat-primary,
+.mat-mdc-flat-button.mat-primary {
+  background-color: $ashley-orange !important;
+  color: #fff !important;
+}
+
+.mat-mdc-tab-group .mat-mdc-tab.mat-mdc-tab-active {
+  border-bottom: 3px solid $ashley-orange;
+}
+

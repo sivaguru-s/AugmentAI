@@ -4,22 +4,33 @@ using System.Data;
 namespace EPay.Api.Repositories
 {
     /// <summary>
-    /// Repository interface for invoice data access
+    /// Repository interface for invoice data access operations.
+    /// Provides methods for searching invoices and retrieving configuration.
     /// </summary>
     public interface IInvoiceRepository
     {
         /// <summary>
-        /// Search invoices with pagination
+        /// Searches invoices using the stored procedure usp_OrderAndInvoiceReportingOpenInvoices3.
         /// </summary>
-        /// <param name="request">Search criteria</param>
-        /// <returns>DataTable with invoice data and PageCount column</returns>
-        Task<DataTable> SearchInvoicesAsync(InvoiceSearchRequest request);
+        /// <param name="request">The search criteria including customer number, date range, and pagination.</param>
+        /// <param name="cancellationToken">Cancellation token to cancel the operation.</param>
+        /// <returns>
+        /// A <see cref="DataTable"/> containing invoice data with columns matching the stored procedure output.
+        /// Includes a PageCount column for pagination support.
+        /// </returns>
+        /// <exception cref="ArgumentNullException">Thrown when <paramref name="request"/> is null.</exception>
+        /// <exception cref="EPay.Api.Exceptions.ValidationException">Thrown when request validation fails.</exception>
+        /// <exception cref="EPay.Api.Exceptions.DataAccessException">Thrown when database operation fails.</exception>
+        Task<DataTable> SearchInvoicesAsync(InvoiceSearchRequest request, CancellationToken cancellationToken = default);
 
         /// <summary>
-        /// Get default date span in days for invoice search
+        /// Gets the default date span in days for invoice search from the database configuration.
         /// </summary>
-        /// <returns>Number of days</returns>
-        Task<int> GetDefaultDateSpanInDaysAsync();
+        /// <param name="cancellationToken">Cancellation token to cancel the operation.</param>
+        /// <returns>
+        /// The default date span in days. Returns 180 (6 months) if the stored procedure fails or returns null.
+        /// </returns>
+        Task<int> GetDefaultDateSpanInDaysAsync(CancellationToken cancellationToken = default);
     }
 }
 
