@@ -1,38 +1,43 @@
 # Onbase Invoice Chatbot AI Agent
 
-An intelligent chatbot that searches and retrieves invoice information from Onbase SQL database using natural language queries - **no API key authentication required**.
+An intelligent chatbot that searches and retrieves invoice information from Onbase SQL database using **Azure OpenAI** for advanced natural language processing.
 
 ## Business Context
 
 The Finance Accounting department at Ashley Furniture Industries uses a service to upload Accounts Payable (AP) invoices to the **Onbase system** (a comprehensive document management system). Vendor invoices are automatically uploaded to Onbase through various vendor systems, with **Kofax** being the primary integration platform.
 
-This chatbot was developed as a **Proof of Concept (POC)** in response to an internal request from the Finance team for an intelligent search solution. The chatbot communicates directly with the Onbase database and processes natural language queries to fetch invoice analytics and information in real-time.
+This chatbot was developed as a **Proof of Concept (POC)** in response to an internal request from the Finance team for an intelligent search solution. The chatbot uses **Azure OpenAI** to understand natural language queries and communicates directly with the Onbase database to fetch invoice analytics and information in real-time.
 
 **📖 For detailed documentation, see [User Guide](docs/USER_GUIDE.md)**
+**🔧 For Azure OpenAI setup, see [Azure OpenAI Setup Guide](docs/AZURE_OPENAI_SETUP.md)**
 
 ## Features
 
-- 🤖 **AI-Powered Natural Language Processing** - Uses pattern matching and intent detection (no external API keys needed)
+- 🤖 **Azure OpenAI Integration** - Advanced natural language understanding using GPT-4 or GPT-3.5-Turbo
 - 🔍 **Smart Invoice Search** - Search by vendor, invoice number, PO number, status, amount, date range, and more
 - 💬 **Conversational Interface** - Simple web-based chat interface
-- 🚀 **Fast & Efficient** - Direct SQL queries to Onbase database
-- 🔒 **Secure** - Uses Windows Integrated Security for database connection
+- 🚀 **Fast & Efficient** - Direct SQL queries to Onbase database with AI-powered query parsing
+- 🔒 **Secure** - Uses Windows Integrated Security for database connection and Azure Key Vault for API keys
 
 ## Technology Stack
 
 - **Backend**: ASP.NET Core 8.0 Web API
+- **AI/NLP**: Azure OpenAI (GPT-4 / GPT-3.5-Turbo)
 - **Database**: SQL Server (Onbase)
 - **ORM**: Dapper
 - **Frontend**: HTML, CSS, JavaScript (Vanilla)
-- **AI/NLP**: Custom pattern-based query parser (no external dependencies)
+- **Cloud**: Microsoft Azure (Azure OpenAI Service, Azure Key Vault)
 
 ## Prerequisites
 
 - .NET 8.0 SDK
 - Access to Onbase SQL Server database
 - Windows environment (for Integrated Security)
+- **Azure OpenAI resource** with deployed GPT model ([Setup Guide](docs/AZURE_OPENAI_SETUP.md))
 
 ## Configuration
+
+### Database Configuration
 
 The connection string is configured in `appsettings.json`:
 
@@ -43,6 +48,28 @@ The connection string is configured in `appsettings.json`:
   }
 }
 ```
+
+### Azure OpenAI Configuration
+
+Configure Azure OpenAI settings in `appsettings.json` (development) or Azure Key Vault (production):
+
+```json
+{
+  "AzureOpenAI": {
+    "Endpoint": "https://your-resource-name.openai.azure.com/",
+    "ApiKey": "YOUR_API_KEY_HERE",
+    "DeploymentName": "gpt-4",
+    "MaxTokens": 1500,
+    "Temperature": 0.7
+  }
+}
+```
+
+**⚠️ IMPORTANT**:
+- Never commit API keys to source control
+- Use User Secrets for development: `dotnet user-secrets set "AzureOpenAI:ApiKey" "YOUR_KEY"`
+- Use Azure Key Vault for production
+- See [Azure OpenAI Setup Guide](docs/AZURE_OPENAI_SETUP.md) for detailed instructions
 
 ## Installation & Running
 

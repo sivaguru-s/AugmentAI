@@ -1,4 +1,5 @@
 using Chatbot_Onbase.Data;
+using Chatbot_Onbase.Models;
 using Chatbot_Onbase.Services;
 using Serilog;
 
@@ -46,18 +47,29 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
 {
-    c.SwaggerDoc("v1", new() { 
-        Title = "Onbase Invoice Chatbot API", 
+    c.SwaggerDoc("v1", new() {
+        Title = "Onbase Invoice Chatbot API",
         Version = "v1",
-        Description = "AI-powered chatbot for searching invoice information from Onbase database without API key authentication"
+        Description = "AI-powered chatbot using Azure OpenAI for natural language processing of invoice queries"
     });
 });
 
+// Configure Azure OpenAI settings
+builder.Services.Configure<AzureOpenAISettings>(
+    builder.Configuration.GetSection("AzureOpenAI"));
+
 // Register application services
 builder.Services.AddScoped<IOnbaseRepository, OnbaseRepository>();
-builder.Services.AddScoped<IInvoiceQueryParser, InvoiceQueryParser>();
+builder.Services.AddScoped<IAzureOpenAIService, AzureOpenAIService>();
 builder.Services.AddScoped<IInvoiceAnalyticsService, InvoiceAnalyticsService>();
 builder.Services.AddScoped<IChatbotService, ChatbotService>();
+
+// Log Azure OpenAI configuration (without API key)
+var azureConfig = builder.Configuration.GetSection("AzureOpenAI");
+Log.Information("Azure OpenAI Endpoint: {Endpoint}", azureConfig["Endpoint"]);
+Log.Information("Azure OpenAI Deployment: {Deployment}", azureConfig["DeploymentName"]);
+Log.Information("Azure OpenAI API Key: {Configured}",
+    string.IsNullOrEmpty(azureConfig["ApiKey"]) ? "NOT CONFIGURED" : "CONFIGURED");
 
 // Add CORS
 builder.Services.AddCors(options =>

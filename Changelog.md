@@ -7,7 +7,38 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- 2026-04-15 - **Azure OpenAI Integration** - Replaced pattern-based NLP with Azure OpenAI for advanced natural language processing
+  - Added Azure.AI.OpenAI NuGet package (v2.1.0)
+  - Created AzureOpenAIService with function calling for structured parameter extraction
+  - Created AzureOpenAISettings model for configuration management
+  - Added comprehensive Azure OpenAI setup guide (docs/AZURE_OPENAI_SETUP.md)
+  - Configured support for GPT-4 and GPT-3.5-Turbo deployments
+  - Implemented secure API key management (User Secrets, Azure Key Vault, Environment Variables)
+  - Added detailed cost analysis and pricing estimates
+  - Created troubleshooting guide for common Azure OpenAI issues
+
 ### Changed
+- 2026-04-15 - **ChatbotService** - Updated to use IAzureOpenAIService instead of IInvoiceQueryParser
+  - Replaced synchronous ParseQuery with asynchronous ParseQueryAsync
+  - Maintained backward compatibility with existing QueryIntent structure
+  - Enhanced logging for Azure OpenAI API calls
+- 2026-04-15 - **Program.cs** - Added Azure OpenAI configuration and service registration
+  - Configured AzureOpenAISettings from appsettings.json
+  - Registered IAzureOpenAIService with dependency injection
+  - Added logging for Azure OpenAI configuration validation
+  - Updated Swagger description to reflect Azure OpenAI integration
+- 2026-04-15 - **README.md** - Updated documentation to reflect Azure OpenAI integration
+  - Added Azure OpenAI to technology stack
+  - Updated prerequisites to include Azure OpenAI resource
+  - Added configuration section for Azure OpenAI settings
+  - Included security warnings for API key management
+  - Added link to Azure OpenAI Setup Guide
+- 2026-04-15 - **appsettings.json** - Added Azure OpenAI configuration section
+  - Endpoint URL for Azure OpenAI resource
+  - API Key placeholder with security warning
+  - Deployment name configuration
+  - MaxTokens and Temperature settings
 - 2026-03-23 - Multiple files - Replace production DB connection string with staging server (aazeus-obdmsq01)
   - Updated appsettings.json to use staging server: aazeus-obdmsq01
   - Removed production-specific documentation files

@@ -11,18 +11,18 @@ public interface IChatbotService
 public class ChatbotService : IChatbotService
 {
     private readonly IOnbaseRepository _repository;
-    private readonly IInvoiceQueryParser _queryParser;
+    private readonly IAzureOpenAIService _azureOpenAIService;
     private readonly IInvoiceAnalyticsService _analyticsService;
     private readonly ILogger<ChatbotService> _logger;
 
     public ChatbotService(
         IOnbaseRepository repository,
-        IInvoiceQueryParser queryParser,
+        IAzureOpenAIService azureOpenAIService,
         IInvoiceAnalyticsService analyticsService,
         ILogger<ChatbotService> logger)
     {
         _repository = repository;
-        _queryParser = queryParser;
+        _azureOpenAIService = azureOpenAIService;
         _analyticsService = analyticsService;
         _logger = logger;
     }
@@ -33,8 +33,8 @@ public class ChatbotService : IChatbotService
         {
             _logger.LogInformation("Processing query: {Query}", userPrompt);
 
-            // Parse the user's intent
-            var intent = _queryParser.ParseQuery(userPrompt);
+            // Parse the user's intent using Azure OpenAI
+            var intent = await _azureOpenAIService.ParseQueryAsync(userPrompt);
 
             _logger.LogInformation("Detected intent: {Intent}", intent.IntentType);
 
