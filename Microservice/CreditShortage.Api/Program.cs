@@ -1,5 +1,6 @@
 using CreditShortage.Application;
 using CreditShortage.Infrastructure;
+using Microsoft.Extensions.Configuration;
 using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -78,7 +79,7 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
-app.UseSerilogRequestLogging();
+//app.UseSerilogRequestLogging();
 app.UseCors("AllowAll");
 app.UseAuthorization();
 

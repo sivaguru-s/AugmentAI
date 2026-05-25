@@ -21,6 +21,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\CreditShortage.Application\CreditShortage.Application.csproj" />
+    <ProjectReference Include="..\CreditShortage.Infrastructure\CreditShortage.Infrastructure.csproj" />
   </ItemGroup>
 
 </Project>
