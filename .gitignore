@@ -150,3 +150,6 @@ appsettings.Development.json
 appsettings.Production.json
 **/appsettings.*.json
 !**/appsettings.json
+
+# Ignore SourceCode folder (external repository)
+SourceCode/

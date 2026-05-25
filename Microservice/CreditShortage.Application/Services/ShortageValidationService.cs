@@ -118,13 +118,13 @@ public class ShortageValidationService : IShortageValidationService
         return response;
     }
 
-    public async Task<ValidationStatistics> GetValidationStatisticsAsync()
+    public Task<ValidationStatistics> GetValidationStatisticsAsync()
     {
         // This would typically query a validation log table
         // For now, returning placeholder statistics
         _logger.LogInformation("Fetching validation statistics");
 
-        return new ValidationStatistics
+        var statistics = new ValidationStatistics
         {
             TotalValidationsToday = 0,
             SuccessfulValidationsToday = 0,
@@ -132,6 +132,8 @@ public class ShortageValidationService : IShortageValidationService
             SuccessRate = 0,
             TopFailureReasons = new Dictionary<string, int>()
         };
+
+        return Task.FromResult(statistics);
     }
 
     private ShortageValidationInput MapToValidationInput(ShortageItemRequest request)
