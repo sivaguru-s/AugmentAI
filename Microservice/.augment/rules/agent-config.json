@@ -1,0 +1,270 @@
+{
+  "version": "3.0",
+  "lastUpdated": "2025-11-22",
+  "repository": "ashley-standards",
+  "augmentOptimized": true,
+  
+  "agents": {
+    "orchestrator": {
+      "file": "Agent_Master_Orchestrator.md",
+      "activation": ["@orchestrator", "@master"],
+      "category": "orchestration",
+      "description": "Coordinates multiple agents for complex multi-component projects",
+      "augmentOptimized": true,
+      "useCases": ["Full-stack features", "Multi-service projects", "Complex integrations"]
+    },
+    
+    "python": {
+      "file": "Agent_Python_Developer.md",
+      "activation": ["@python"],
+      "category": "language",
+      "description": "Python 3.10+ development with async, FastAPI, Django, pytest",
+      "augmentOptimized": true,
+      "useCases": ["Python APIs", "Data processing", "Backend services"]
+    },
+    
+    "rust": {
+      "file": "Agent_Rust_Developer.md",
+      "activation": ["@rust"],
+      "category": "language",
+      "description": "Rust 2021 with ownership, borrowing, async, tokio",
+      "augmentOptimized": true,
+      "useCases": ["Systems programming", "Performance-critical code", "WebAssembly"]
+    },
+    
+    "javascript": {
+      "file": "Agent_Modern_JavaScript_TypeScript_Developer.md",
+      "activation": ["@javascript", "@typescript", "@js", "@ts"],
+      "category": "language",
+      "description": "ES2023+, TypeScript 5+, React, Vue, Node.js",
+      "augmentOptimized": true,
+      "useCases": ["Frontend development", "Node.js backends", "Full-stack JS/TS"]
+    },
+    
+    "dotnet": {
+      "file": "Agent_DotNet_Developer.md",
+      "activation": ["@dotnet", "@csharp", "@cs"],
+      "category": "language",
+      "description": ".NET 8/9/10, C# 12+, Minimal APIs, EF Core, Blazor",
+      "augmentOptimized": true,
+      "useCases": [".NET applications", "ASP.NET Core APIs", "Blazor frontends"]
+    },
+    
+    "backend": {
+      "file": "Agent_Backend_Developer.md",
+      "activation": ["@backend"],
+      "category": "role",
+      "description": "Backend services, APIs, microservices, SOLID principles",
+      "augmentOptimized": true,
+      "useCases": ["Backend services", "REST/gRPC APIs", "Microservices"]
+    },
+    
+    "blazor": {
+      "file": "Agent_Frontend_Blazor_Developer.md",
+      "activation": ["@blazor", "@frontend-blazor"],
+      "category": "language",
+      "description": "Blazor WebAssembly/Server, design systems, WCAG 2.1 AA",
+      "augmentOptimized": true,
+      "useCases": ["Blazor frontends", "Accessible UIs", "Design system integration"]
+    },
+    
+    "database": {
+      "file": "Agent_Database_Developer.md",
+      "activation": ["@database", "@sql"],
+      "category": "infrastructure",
+      "description": "Schema design, query optimization, migrations, PostgreSQL, MySQL",
+      "augmentOptimized": true,
+      "useCases": ["Database design", "Query optimization", "Schema migrations"]
+    },
+    
+    "dba": {
+      "file": "Agent_DBA.md",
+      "activation": ["@dba"],
+      "category": "infrastructure",
+      "description": "Database administration, performance tuning, backup/recovery",
+      "augmentOptimized": true,
+      "useCases": ["Database operations", "Performance issues", "Backup strategies"]
+    },
+    
+    "devops": {
+      "file": "Agent_DevOps_SRE.md",
+      "activation": ["@devops", "@sre"],
+      "category": "infrastructure",
+      "description": "CI/CD, Docker, Kubernetes, Terraform, monitoring",
+      "augmentOptimized": true,
+      "useCases": ["Infrastructure setup", "Deployment pipelines", "Monitoring"]
+    },
+    
+    "qa": {
+      "file": "Agent_QA_Testing.md",
+      "activation": ["@qa", "@testing"],
+      "category": "quality",
+      "description": "Test strategy, automation, Playwright, Cypress, API testing",
+      "augmentOptimized": true,
+      "useCases": ["Test planning", "Test automation", "Quality assurance"]
+    },
+    
+    "security": {
+      "file": "Agent_Security_Engineer.md",
+      "activation": ["@security"],
+      "category": "quality",
+      "description": "Security reviews, OWASP Top 10, compliance, vulnerability assessment",
+      "augmentOptimized": true,
+      "useCases": ["Security reviews", "Threat modeling", "Compliance"]
+    },
+    
+    "pm": {
+      "file": "Agent_Technical_PM.md",
+      "activation": ["@pm", "@project-manager"],
+      "category": "orchestration",
+      "description": "Project planning, sprint management, stakeholder communication",
+      "augmentOptimized": true,
+      "useCases": ["Project roadmaps", "Sprint planning", "Status reports"]
+    },
+    
+    "requirements-light": {
+      "file": "Agent_Lightweight_Requirements.md",
+      "activation": ["@requirements-light", "@req-light"],
+      "category": "orchestration",
+      "description": "Quick requirements gathering for small features",
+      "augmentOptimized": true,
+      "useCases": ["Small features", "Quick iterations", "Simple requirements"]
+    },
+    
+    "requirements-full": {
+      "file": "Agent_Comprehensive_Requirements.md",
+      "activation": ["@requirements-full", "@req-full"],
+      "category": "orchestration",
+      "description": "Detailed requirements documentation for complex features",
+      "augmentOptimized": true,
+      "useCases": ["Large features", "Complex systems", "Detailed specifications"]
+    },
+
+    "api-designer": {
+      "file": "Agent_API_Designer.md",
+      "activation": ["@api-designer", "@api"],
+      "category": "design",
+      "description": "API design, OpenAPI specs, REST/GraphQL/gRPC",
+      "augmentOptimized": true,
+      "useCases": ["API design", "OpenAPI specifications", "Endpoint planning"]
+    },
+
+    "data-architect": {
+      "file": "Agent_Data_Architect.md",
+      "activation": ["@data-architect"],
+      "category": "design",
+      "description": "Data modeling, ER diagrams, data warehousing, ETL/ELT",
+      "augmentOptimized": true,
+      "useCases": ["Data architecture", "Data modeling", "Warehouse design"]
+    },
+
+    "performance": {
+      "file": "Agent_Performance_Engineer.md",
+      "activation": ["@performance"],
+      "category": "quality",
+      "description": "Performance profiling, load testing, optimization",
+      "augmentOptimized": true,
+      "useCases": ["Performance optimization", "Load testing", "Bottleneck identification"]
+    },
+
+    "docs": {
+      "file": "Agent_Documentation_Specialist.md",
+      "activation": ["@docs", "@documentation"],
+      "category": "orchestration",
+      "description": "Technical writing, API docs, architecture diagrams",
+      "augmentOptimized": true,
+      "useCases": ["Documentation", "Diagrams", "API specs", "User guides"]
+    },
+
+    "code-review": {
+      "file": "Agent_Code_Reviewer.md",
+      "activation": ["@code-review", "@review"],
+      "category": "quality",
+      "description": "Code quality, best practices, security, performance",
+      "augmentOptimized": true,
+      "useCases": ["Code reviews", "Quality assurance", "Issue identification"]
+    },
+
+    "business-requirements": {
+      "file": "Agent_Business_Requirements.md",
+      "activation": ["@business-requirements", "@brd", "@business-analysis"],
+      "category": "orchestration",
+      "description": "Business requirements analysis, BRD creation, retroactive extraction",
+      "augmentOptimized": true,
+      "useCases": ["New project analysis", "Retroactive documentation", "BRD/PRD creation"]
+    }
+  },
+  
+  "categories": {
+    "orchestration": {
+      "name": "Orchestration & Management",
+      "description": "Project coordination, requirements, and management",
+      "icon": "🎯",
+      "count": 5
+    },
+    "language": {
+      "name": "Language-Specific Developers",
+      "description": "Specialized agents for specific programming languages",
+      "icon": "💻",
+      "count": 5
+    },
+    "role": {
+      "name": "Role-Based Specialists",
+      "description": "Specialists for specific development roles",
+      "icon": "👥",
+      "count": 1
+    },
+    "infrastructure": {
+      "name": "Infrastructure & Data",
+      "description": "DevOps, databases, and infrastructure",
+      "icon": "🗄️",
+      "count": 4
+    },
+    "quality": {
+      "name": "Quality & Security",
+      "description": "Testing, security, and quality assurance",
+      "icon": "🧪",
+      "count": 4
+    },
+    "design": {
+      "name": "Design & Architecture",
+      "description": "API design, data architecture, performance",
+      "icon": "🎨",
+      "count": 3
+    }
+  },
+
+  "statistics": {
+    "totalAgents": 22,
+    "augmentOptimized": 22,
+    "categories": 6,
+    "version": "3.1"
+  },
+  
+  "augmentFeatures": {
+    "codebaseRetrieval": {
+      "enabled": true,
+      "description": "All agents use codebase-retrieval for context gathering"
+    },
+    "taskManagement": {
+      "enabled": true,
+      "description": "All agents use task management for planning and tracking"
+    },
+    "parallelToolCalls": {
+      "enabled": true,
+      "description": "All agents make parallel tool calls for efficiency"
+    },
+    "gitCommitRetrieval": {
+      "enabled": true,
+      "description": "Agents can access git history for context"
+    }
+  },
+  
+  "overridePattern": {
+    "enabled": true,
+    "description": "Projects can override core agents",
+    "methods": ["direct-copy", "symlink", "git-submodule"],
+    "documentation": "AGENT_SYSTEM_ARCHITECTURE.md"
+  }
+}
+
