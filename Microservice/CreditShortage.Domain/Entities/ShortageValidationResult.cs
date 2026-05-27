@@ -12,9 +12,10 @@ public class ShortageValidationResult
     public string ItemNumber { get; set; } = string.Empty;
     public string SerialNumber { get; set; } = string.Empty;
     public int ShortageQuantity { get; set; }
+    public decimal? Amount { get; set; }  // Credit amount for the shortage
     public string DefectCode { get; set; } = string.Empty;
     public string LocationCode { get; set; } = string.Empty;
-    public int? OrderNumber { get; set; }
+    public string? OrderNumber { get; set; }  // Changed from int? to string? to match SP (VARCHAR(10))
     public int? OrderItemSeq { get; set; }
     public bool IsValid { get; set; }
     public string ValidationErrors { get; set; } = string.Empty;

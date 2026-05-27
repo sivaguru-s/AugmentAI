@@ -23,8 +23,8 @@ GO
 * Projects: Credit Shortage Validation Microservice
 * Sample Execution:
 *		DECLARE @ShortageItems AS dbo.typCEShortageItemValidation;
-*		INSERT INTO @ShortageItems 
-*		SELECT '8888300', '0001', 110433, 'C310325', '7320325', 1, 'XP', 'WU', 1234567, 100;
+*		INSERT INTO @ShortageItems
+*		SELECT '8888300', '0001', 110433, 'C310325', '7320325', 1, 125.50, 'XP', 'WU', 1234567, 100;
 *		EXECUTE usp_CE_ValidateShortageItems @ShortageItems, 'AFI';
 *
 * Created: 2026-05-20
@@ -39,22 +39,31 @@ GO
 * 6. Location code must be valid (default: WU)
 *******************************************************************************/
 
--- First, create the User Defined Table Type for input parameters
-IF NOT EXISTS (SELECT * FROM sys.types WHERE is_table_type = 1 AND name = 'typCEShortageItemValidation')
+-- First, check if the table type exists and drop it if the schema needs to change
+IF EXISTS (SELECT * FROM sys.types WHERE is_table_type = 1 AND name = 'typCEShortageItemValidation')
 BEGIN
-	CREATE TYPE [dbo].[typCEShortageItemValidation] AS TABLE(
-		[CustomerNumber] VARCHAR(8) NOT NULL,
-		[ShipToNumber] VARCHAR(4) NOT NULL,
-		[InvoiceNumber] NUMERIC(6,0) NOT NULL,
-		[ItemNumber] VARCHAR(15) NOT NULL,
-		[SerialNumber] VARCHAR(10) NOT NULL,
-		[ShortageQuantity] NUMERIC(7,0) NOT NULL,
-		[DefectCode] VARCHAR(4) NULL,
-		[LocationCode] VARCHAR(2) NULL,
-		[OrderNumber] NUMERIC(7,0) NULL,
-		[OrderItemSeq] INT NULL
-	)
+	-- Drop the existing type (requires no active dependencies)
+	DROP TYPE [dbo].[typCEShortageItemValidation];
 END
+GO
+
+-- Create the User Defined Table Type for input parameters
+-- Updated: OrderNumber changed from NUMERIC(7,0) to VARCHAR(10) to support alphanumeric formats like 'D623146'
+-- Updated: InvoiceNumber changed from NUMERIC(6,0) to NUMERIC(8,0) to support larger invoice numbers
+-- Updated: Added Amount DECIMAL(10,2) to support credit amount
+CREATE TYPE [dbo].[typCEShortageItemValidation] AS TABLE(
+	[CustomerNumber] VARCHAR(8) NOT NULL,
+	[ShipToNumber] VARCHAR(4) NOT NULL,
+	[InvoiceNumber] NUMERIC(8,0) NOT NULL,  -- Changed from NUMERIC(6,0) to NUMERIC(8,0)
+	[ItemNumber] VARCHAR(15) NOT NULL,
+	[SerialNumber] VARCHAR(10) NOT NULL,
+	[ShortageQuantity] NUMERIC(7,0) NOT NULL,
+	[Amount] DECIMAL(10,2) NULL,  -- Credit amount for the shortage
+	[DefectCode] VARCHAR(4) NULL,
+	[LocationCode] VARCHAR(2) NULL,
+	[OrderNumber] VARCHAR(10) NULL,  -- Changed from NUMERIC(7,0) to VARCHAR(10)
+	[OrderItemSeq] INT NULL
+);
 GO
 
 -- Create the stored procedure
@@ -73,13 +82,14 @@ BEGIN
 	CREATE TABLE #ValidationResults (
 		CustomerNumber VARCHAR(8),
 		ShipToNumber VARCHAR(4),
-		InvoiceNumber NUMERIC(6,0),
+		InvoiceNumber NUMERIC(8,0),  -- Changed from NUMERIC(6,0)
 		ItemNumber VARCHAR(15),
 		SerialNumber VARCHAR(10),
 		ShortageQuantity NUMERIC(7,0),
+		Amount DECIMAL(10,2),  -- Credit amount for the shortage
 		DefectCode VARCHAR(4),
 		LocationCode VARCHAR(2),
-		OrderNumber NUMERIC(7,0),
+		OrderNumber VARCHAR(10),  -- Changed from NUMERIC(7,0)
 		OrderItemSeq INT,
 		IsValid BIT DEFAULT 1,
 		ValidationErrors VARCHAR(MAX) DEFAULT '',
@@ -89,21 +99,24 @@ BEGIN
 		ItemExists BIT DEFAULT 0,
 		CustomerSerialItemValid BIT DEFAULT 0,
 		DefectCodeValid BIT DEFAULT 0,
-		LocationCodeValid BIT DEFAULT 0
+		LocationCodeValid BIT DEFAULT 0,
+		IsDFICustomer BIT DEFAULT 0,
+		WarehouseCode VARCHAR(10) DEFAULT NULL
 	);
 
 	-- Initialize results with input data and defaults
 	INSERT INTO #ValidationResults (
 		CustomerNumber, ShipToNumber, InvoiceNumber, ItemNumber, SerialNumber,
-		ShortageQuantity, DefectCode, LocationCode, OrderNumber, OrderItemSeq
+		ShortageQuantity, Amount, DefectCode, LocationCode, OrderNumber, OrderItemSeq
 	)
-	SELECT 
+	SELECT
 		CustomerNumber,
 		ShipToNumber,
 		InvoiceNumber,
 		ItemNumber,
 		SerialNumber,
 		ShortageQuantity,
+		Amount,  -- Credit amount
 		ISNULL(DefectCode, @DefaultDefectCode) AS DefectCode,
 		ISNULL(LocationCode, @DefaultLocationCode) AS LocationCode,
 		OrderNumber,
@@ -121,41 +134,69 @@ BEGIN
 	-- VALIDATION 1: Verify Item Exists and is Valid
 	--=============================================================================
 	UPDATE VR
-	SET ItemExists = CASE WHEN IM.itmItemnumber IS NOT NULL THEN 1 ELSE 0 END,
-		ValidationErrors = CASE 
-			WHEN IM.itmItemnumber IS NULL 
-			THEN ValidationErrors + 'ERROR: Item [' + VR.ItemNumber + '] does not exist or is invalid. ' 
-			ELSE ValidationErrors 
+	SET ItemExists = CASE WHEN IM.imaItnbr IS NOT NULL THEN 1 ELSE 0 END,
+		ValidationErrors = CASE
+			WHEN IM.imaItnbr IS NULL
+			THEN ValidationErrors + 'ERROR: Item [' + VR.ItemNumber + '] does not exist or is invalid. '
+			ELSE ValidationErrors
 		END,
-		IsValid = CASE WHEN IM.itmItemnumber IS NULL THEN 0 ELSE IsValid END
+		IsValid = CASE WHEN IM.imaItnbr IS NULL THEN 0 ELSE IsValid END
 	FROM #ValidationResults VR
 	LEFT JOIN Ashley.dbo.tblItemMaster IM WITH (NOLOCK)
-		ON IM.itmItemnumber = VR.ItemNumber;
+		ON IM.imaItnbr = VR.ItemNumber;
 
 	--=============================================================================
 	-- VALIDATION 2: Verify Customer/Serial/Item Combination
 	--=============================================================================
+	-- Special handling for serial number 999999 (no serial number)
+	-- For 999999: Only check if customer purchased the item (ignore serial match)
+	-- For specific serial: Check exact customer/invoice/serial/item match
 	UPDATE VR
-	SET CustomerSerialItemValid = CASE WHEN IND.indCusno IS NOT NULL THEN 1 ELSE 0 END,
-		ValidationErrors = CASE 
-			WHEN IND.indCusno IS NULL 
-			THEN ValidationErrors + 'ERROR: Customer/Serial/Item combination is invalid. Item not found on serial ' + VR.SerialNumber + ' for customer ' + VR.CustomerNumber + '. '
-			ELSE ValidationErrors 
+	SET CustomerSerialItemValid = CASE
+			-- For serial 999999: Check if customer purchased this item
+			WHEN VR.SerialNumber = '999999' THEN
+				CASE WHEN COALESCE(IND_NOSER.indCusno, INDA_NOSER.indCusno) IS NOT NULL THEN 1 ELSE 0 END
+			-- For specific serial: Check exact match
+			ELSE
+				CASE WHEN COALESCE(IND.indCusno, INDA.indCusno) IS NOT NULL THEN 1 ELSE 0 END
 		END,
-		IsValid = CASE WHEN IND.indCusno IS NULL THEN 0 ELSE IsValid END
+		ValidationErrors = CASE
+			WHEN VR.SerialNumber = '999999' AND COALESCE(IND_NOSER.indCusno, INDA_NOSER.indCusno) IS NULL
+			THEN ValidationErrors + 'ERROR: Customer [' + VR.CustomerNumber + '] did not purchase item [' + VR.ItemNumber + ']. '
+			WHEN VR.SerialNumber <> '999999' AND COALESCE(IND.indCusno, INDA.indCusno) IS NULL
+			THEN ValidationErrors + 'ERROR: Customer/Serial/Item combination is invalid. Item not found on serial ' + VR.SerialNumber + ' for customer ' + VR.CustomerNumber + '. '
+			ELSE ValidationErrors
+		END,
+		IsValid = CASE
+			WHEN VR.SerialNumber = '999999' AND COALESCE(IND_NOSER.indCusno, INDA_NOSER.indCusno) IS NULL THEN 0
+			WHEN VR.SerialNumber <> '999999' AND COALESCE(IND.indCusno, INDA.indCusno) IS NULL THEN 0
+			ELSE IsValid
+		END
 	FROM #ValidationResults VR
+	-- For specific serial numbers: exact match on customer/invoice/serial/item
 	LEFT JOIN Datawhse.dbo.tblInvoiceDetail IND WITH (NOLOCK)
 		ON IND.indCusno = VR.CustomerNumber
 		AND IND.indInvno = VR.InvoiceNumber
-		AND IND.indSerno = VR.SerialNumber
+		AND IND.indSeriesCode = VR.SerialNumber
 		AND IND.indItnbr = VR.ItemNumber
+		AND VR.SerialNumber <> '999999'
 	LEFT JOIN Archive.dbo.tblInvoiceDetail INDA WITH (NOLOCK)
 		ON INDA.indCusno = VR.CustomerNumber
 		AND INDA.indInvno = VR.InvoiceNumber
-		AND INDA.indSerno = VR.SerialNumber
+		AND INDA.indSeriesCode = VR.SerialNumber
 		AND INDA.indItnbr = VR.ItemNumber
-		AND IND.indCusno IS NULL -- Only check archive if not found in current
-	WHERE IND.indCusno IS NOT NULL OR INDA.indCusno IS NOT NULL;
+		AND IND.indCusno IS NULL
+		AND VR.SerialNumber <> '999999'
+	-- For serial 999999: check if customer purchased item (ignore serial)
+	LEFT JOIN Datawhse.dbo.tblInvoiceDetail IND_NOSER WITH (NOLOCK)
+		ON IND_NOSER.indCusno = VR.CustomerNumber
+		AND IND_NOSER.indItnbr = VR.ItemNumber
+		AND VR.SerialNumber = '999999'
+	LEFT JOIN Archive.dbo.tblInvoiceDetail INDA_NOSER WITH (NOLOCK)
+		ON INDA_NOSER.indCusno = VR.CustomerNumber
+		AND INDA_NOSER.indItnbr = VR.ItemNumber
+		AND IND_NOSER.indCusno IS NULL
+		AND VR.SerialNumber = '999999';
 
 	--=============================================================================
 	-- VALIDATION 3: Get Original Order Quantities
@@ -232,33 +273,67 @@ BEGIN
 	-- VALIDATION 6: Validate Defect Code
 	--=============================================================================
 	UPDATE VR
-	SET DefectCodeValid = CASE WHEN DC.defDefectCode IS NOT NULL THEN 1 ELSE 0 END,
+	SET DefectCodeValid = CASE WHEN DC.raaDefCode IS NOT NULL THEN 1 ELSE 0 END,
 		ValidationErrors = CASE
-			WHEN DC.defDefectCode IS NULL
+			WHEN DC.raaDefCode IS NULL
 			THEN ValidationErrors + 'ERROR: Defect code [' + VR.DefectCode + '] is invalid or inactive. '
 			ELSE ValidationErrors
 		END,
-		IsValid = CASE WHEN DC.defDefectCode IS NULL THEN 0 ELSE IsValid END
+		IsValid = CASE WHEN DC.raaDefCode IS NULL THEN 0 ELSE IsValid END
 	FROM #ValidationResults VR
-	LEFT JOIN Ashley.dbo.tblDefectCodes DC WITH (NOLOCK)
-		ON DC.defDefectCode = VR.DefectCode
-		AND DC.defActive = 'Y'; -- Only active defect codes
+	LEFT JOIN Ashley.dbo.tblRetAllowAddDefects DC WITH (NOLOCK)
+		ON DC.raaDefCode = VR.DefectCode;
 
 	--=============================================================================
 	-- VALIDATION 7: Validate Location Code
 	--=============================================================================
 	UPDATE VR
-	SET LocationCodeValid = CASE WHEN WH.whsWhseCode IS NOT NULL THEN 1 ELSE 0 END,
+	SET LocationCodeValid = CASE WHEN WH.wmahouse IS NOT NULL THEN 1 ELSE 0 END,
 		ValidationErrors = CASE
-			WHEN WH.whsWhseCode IS NULL
+			WHEN WH.wmahouse IS NULL
 			THEN ValidationErrors + 'ERROR: Location code [' + VR.LocationCode + '] is invalid or inactive. '
 			ELSE ValidationErrors
 		END,
-		IsValid = CASE WHEN WH.whsWhseCode IS NULL THEN 0 ELSE IsValid END
+		IsValid = CASE WHEN WH.wmahouse IS NULL THEN 0 ELSE IsValid END
 	FROM #ValidationResults VR
-	LEFT JOIN Ashley.dbo.tblWarehouse WH WITH (NOLOCK)
-		ON WH.whsWhseCode = VR.LocationCode
-		AND WH.whsActive = 'Y'; -- Only active warehouses
+	LEFT JOIN Ashley.dbo.tblWarehouseMaster WH WITH (NOLOCK)
+		ON WH.wmahouse = VR.LocationCode;
+
+	--=============================================================================
+	-- VALIDATION 8: Check if DFI Customer
+	--=============================================================================
+	UPDATE VR
+	SET IsDFICustomer = CASE
+		WHEN EXISTS (
+			SELECT 1
+			FROM Ashley.dbo.tblDiscountRates DR WITH (NOLOCK)
+			INNER JOIN Ashley.dbo.tblCustomerShippingLocations CSL WITH (NOLOCK)
+				ON DR.draDcode = CSL.cslDiscountCode
+			WHERE CSL.cslCustomerNumber = VR.CustomerNumber
+				AND CSL.cslShiptoNumber = ''
+				AND DR.draDisc6 > 0
+		) THEN 1
+		ELSE 0
+	END
+	FROM #ValidationResults VR;
+
+	--=============================================================================
+	-- VALIDATION 9: Get Warehouse Code (for Container Warehouse check in application)
+	--=============================================================================
+	UPDATE VR
+	SET WarehouseCode = COALESCE(IND.indInwhse, INDA.indInwhse)
+	FROM #ValidationResults VR
+	LEFT JOIN Datawhse.dbo.tblInvoiceDetail IND WITH (NOLOCK)
+		ON IND.indCusno = VR.CustomerNumber
+		AND IND.indInvno = VR.InvoiceNumber
+		AND IND.indSeriesCode = VR.SerialNumber
+		AND IND.indItnbr = VR.ItemNumber
+	LEFT JOIN Archive.dbo.tblInvoiceDetail INDA WITH (NOLOCK)
+		ON INDA.indCusno = VR.CustomerNumber
+		AND INDA.indInvno = VR.InvoiceNumber
+		AND INDA.indSeriesCode = VR.SerialNumber
+		AND INDA.indItnbr = VR.ItemNumber
+		AND IND.indCusno IS NULL; -- Only check archive if not found in current
 
 	--=============================================================================
 	-- Return Validation Results
@@ -270,6 +345,7 @@ BEGIN
 		ItemNumber,
 		SerialNumber,
 		ShortageQuantity,
+		Amount,  -- Credit amount
 		DefectCode,
 		LocationCode,
 		OrderNumber,
@@ -285,7 +361,9 @@ BEGIN
 		ItemExists,
 		CustomerSerialItemValid,
 		DefectCodeValid,
-		LocationCodeValid
+		LocationCodeValid,
+		IsDFICustomer,
+		WarehouseCode
 	FROM #ValidationResults
 	ORDER BY
 		CASE WHEN IsValid = 0 THEN 0 ELSE 1 END, -- Failed validations first

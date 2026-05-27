@@ -36,6 +36,11 @@ public class ShortageValidationResponse
     public int ShortageQuantity { get; set; }
 
     /// <summary>
+    /// Credit amount for the shortage
+    /// </summary>
+    public decimal? Amount { get; set; }
+
+    /// <summary>
     /// Defect code (with defaults applied)
     /// </summary>
     public string DefectCode { get; set; } = string.Empty;
@@ -46,9 +51,9 @@ public class ShortageValidationResponse
     public string LocationCode { get; set; } = string.Empty;
 
     /// <summary>
-    /// Order number
+    /// Order number (alphanumeric, max 10 characters)
     /// </summary>
-    public int? OrderNumber { get; set; }
+    public string? OrderNumber { get; set; }
 
     /// <summary>
     /// Order item sequence

@@ -49,7 +49,7 @@ public class ShortageValidationServiceTests
             ShipToNumber = "0001",
             ItemNumber = "D425-325",
             SerialNumber = "999999",
-            OrderNumber = 12345678,
+            OrderNumber = "12345678",  // Changed to string
             InvoiceNumber = 12345678,
             ShortageQuantity = 1
         };
@@ -110,7 +110,7 @@ public class ShortageValidationServiceTests
             ShipToNumber = "0001",
             ItemNumber = "INVALID",
             SerialNumber = "999999",
-            OrderNumber = 12345678,
+            OrderNumber = "12345678",  // Changed to string
             InvoiceNumber = 12345678,
             ShortageQuantity = 1
         };
@@ -158,7 +158,7 @@ public class ShortageValidationServiceTests
             ShipToNumber = "0001",
             ItemNumber = "D425-325",
             SerialNumber = "999999",
-            OrderNumber = 12345678,
+            OrderNumber = "12345678",  // Changed to string
             InvoiceNumber = 12345678,
             ShortageQuantity = 1
         };
@@ -189,8 +189,8 @@ public class ShortageValidationServiceTests
         {
             Items = new List<ShortageItemRequest>
             {
-                new() { CustomerNumber = "2067300", ShipToNumber = "0001", ItemNumber = "ITEM001", SerialNumber = "999999", OrderNumber = 12345678, InvoiceNumber = 12345678, ShortageQuantity = 1 },
-                new() { CustomerNumber = "2067300", ShipToNumber = "0001", ItemNumber = "ITEM002", SerialNumber = "999999", OrderNumber = 12345679, InvoiceNumber = 12345679, ShortageQuantity = 2 }
+                new() { CustomerNumber = "2067300", ShipToNumber = "0001", ItemNumber = "ITEM001", SerialNumber = "999999", OrderNumber = "12345678", InvoiceNumber = 12345678, ShortageQuantity = 1 },
+                new() { CustomerNumber = "2067300", ShipToNumber = "0001", ItemNumber = "ITEM002", SerialNumber = "999999", OrderNumber = "12345679", InvoiceNumber = 12345679, ShortageQuantity = 2 }
             }
         };
 
@@ -234,8 +234,8 @@ public class ShortageValidationServiceTests
         {
             Items = new List<ShortageItemRequest>
             {
-                new() { CustomerNumber = "2067300", ShipToNumber = "0001", ItemNumber = "VALID", SerialNumber = "999999", OrderNumber = 12345678, InvoiceNumber = 12345678, ShortageQuantity = 1 },
-                new() { CustomerNumber = "2067300", ShipToNumber = "0001", ItemNumber = "INVALID", SerialNumber = "999999", OrderNumber = 12345679, InvoiceNumber = 12345679, ShortageQuantity = 2 }
+                new() { CustomerNumber = "2067300", ShipToNumber = "0001", ItemNumber = "VALID", SerialNumber = "999999", OrderNumber = "12345678", InvoiceNumber = 12345678, ShortageQuantity = 1 },
+                new() { CustomerNumber = "2067300", ShipToNumber = "0001", ItemNumber = "INVALID", SerialNumber = "999999", OrderNumber = "12345679", InvoiceNumber = 12345679, ShortageQuantity = 2 }
             }
         };
 
@@ -277,7 +277,7 @@ public class ShortageValidationServiceTests
             ShipToNumber = "0001",
             ItemNumber = "D425-325",
             SerialNumber = "999999",
-            OrderNumber = 12345678,
+            OrderNumber = "12345678",  // Changed to string
             InvoiceNumber = 12345678,
             ShortageQuantity = 1,
             Environment = "CUSTOM_ENV"

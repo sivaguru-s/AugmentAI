@@ -134,9 +134,10 @@ public class ShortageValidationRepository : IShortageValidationRepository
         table.Columns.Add("ItemNumber", typeof(string));
         table.Columns.Add("SerialNumber", typeof(string));
         table.Columns.Add("ShortageQuantity", typeof(int));
+        table.Columns.Add("Amount", typeof(decimal));  // Added Amount column
         table.Columns.Add("DefectCode", typeof(string));
         table.Columns.Add("LocationCode", typeof(string));
-        table.Columns.Add("OrderNumber", typeof(int));
+        table.Columns.Add("OrderNumber", typeof(string));
         table.Columns.Add("OrderItemSeq", typeof(int));
 
         foreach (var item in items)
@@ -148,6 +149,7 @@ public class ShortageValidationRepository : IShortageValidationRepository
                 item.ItemNumber,
                 item.SerialNumber,
                 item.ShortageQuantity,
+                item.Amount ?? (object)DBNull.Value,  // Added Amount parameter
                 item.DefectCode ?? (object)DBNull.Value,
                 item.LocationCode ?? (object)DBNull.Value,
                 item.OrderNumber ?? (object)DBNull.Value,

@@ -104,6 +104,7 @@ public class ShortageValidationService : IShortageValidationService
             ItemNumber = request.ItemNumber,
             SerialNumber = serialNumber,
             ShortageQuantity = request.ShortageQuantity,
+            Amount = request.Amount,  // Credit amount
             DefectCode = request.DefectCode,
             LocationCode = request.LocationCode,
             OrderNumber = request.OrderNumber,
@@ -146,6 +147,7 @@ public class ShortageValidationService : IShortageValidationService
             ItemNumber = request.ItemNumber,
             SerialNumber = request.SerialNumber,
             ShortageQuantity = request.ShortageQuantity,
+            Amount = request.Amount,  // Credit amount
             DefectCode = request.DefectCode,
             LocationCode = request.LocationCode,
             OrderNumber = request.OrderNumber,
@@ -163,6 +165,7 @@ public class ShortageValidationService : IShortageValidationService
             ItemNumber = result.ItemNumber,
             SerialNumber = result.SerialNumber,
             ShortageQuantity = result.ShortageQuantity,
+            Amount = result.Amount,  // Credit amount
             DefectCode = result.DefectCode,
             LocationCode = result.LocationCode,
             OrderNumber = result.OrderNumber,

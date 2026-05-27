@@ -25,7 +25,7 @@ public class ShortageItemRequest
     /// Invoice number where shortage occurred
     /// </summary>
     [Required]
-    [Range(1, 999999)]
+    [Range(1, 99999999)]  // Changed to support NUMERIC(8,0) - up to 8 digits
     public int InvoiceNumber { get; set; }
 
     /// <summary>
@@ -50,6 +50,12 @@ public class ShortageItemRequest
     public int ShortageQuantity { get; set; }
 
     /// <summary>
+    /// Credit amount for the shortage (optional, decimal with 2 decimal places)
+    /// </summary>
+    [Range(0.01, 999999.99)]
+    public decimal? Amount { get; set; }
+
+    /// <summary>
     /// Defect code (4 characters max). If null, defaults to 'XP'
     /// </summary>
     [StringLength(4)]
@@ -62,10 +68,10 @@ public class ShortageItemRequest
     public string? LocationCode { get; set; }
 
     /// <summary>
-    /// Original order number (optional)
+    /// Original order number (optional, alphanumeric, 10 characters max)
     /// </summary>
-    [Range(1, 9999999)]
-    public int? OrderNumber { get; set; }
+    [StringLength(10)]
+    public string? OrderNumber { get; set; }
 
     /// <summary>
     /// Order item sequence number (optional)
@@ -103,7 +109,7 @@ public class ShortageItemIWSRequest
     /// Invoice number where shortage occurred
     /// </summary>
     [Required]
-    [Range(1, 999999)]
+    [Range(1, 99999999)]  // Changed to support NUMERIC(8,0) - up to 8 digits
     public int InvoiceNumber { get; set; }
 
     /// <summary>
@@ -121,6 +127,12 @@ public class ShortageItemIWSRequest
     public int ShortageQuantity { get; set; }
 
     /// <summary>
+    /// Credit amount for the shortage (optional, decimal with 2 decimal places)
+    /// </summary>
+    [Range(0.01, 999999.99)]
+    public decimal? Amount { get; set; }
+
+    /// <summary>
     /// Defect code (4 characters max). If null, defaults to 'XP'
     /// </summary>
     [StringLength(4)]
@@ -133,10 +145,10 @@ public class ShortageItemIWSRequest
     public string? LocationCode { get; set; }
 
     /// <summary>
-    /// Original order number (optional)
+    /// Original order number (optional, alphanumeric, 10 characters max)
     /// </summary>
-    [Range(1, 9999999)]
-    public int? OrderNumber { get; set; }
+    [StringLength(10)]
+    public string? OrderNumber { get; set; }
 
     /// <summary>
     /// Order item sequence number (optional)
