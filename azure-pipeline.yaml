@@ -1,0 +1,56 @@
+# Onbase Chatbot API pipeline - build once, deploy to Dev
+# Typically triggered MANUALLY
+
+trigger: none
+pr: none
+
+parameters:
+  - name: deployOnbaseChatbotApi
+    displayName: "Deploy Onbase Chatbot Api"
+    type: boolean
+    default: true
+
+name: OnbaseChatbot-$(Date:yyyyMMdd)$(Rev:.r)
+
+resources:
+  repositories:
+    - repository: pipeline
+      type: git
+      name: Platform/infra-devops-pipelines
+
+stages:
+  # ========================================
+  # Build once (includes env config), then deploy Dev
+  # (Stage/Prod stages can be appended once those environments/appsettings
+  #  files exist for the Onbase Chatbot API)
+  # ========================================
+  - stage: BuildOnbaseChatbotApi
+    displayName: "Build API"
+    condition: and(succeeded(), eq('${{ parameters.deployOnbaseChatbotApi }}', 'true'))
+    jobs:
+      - template: pipelines/build/build-onbase-chatbot-api.yaml
+        parameters:
+          configFilePath: |
+            chatbot-onbase-poc/appsettings.Development.json
+          containerName: "afi/onbase-chatbot-api-dev"
+
+  - stage: Dev_DeployAPI
+    displayName: "Dev Deploy API"
+    dependsOn: BuildOnbaseChatbotApi
+    condition: succeeded()
+    variables:
+      Environment.ASPNETCORE_ENVIRONMENT: "Development"
+    jobs:
+      - template: pipelines/deploy/deploy-onbase-chatbot-api.yaml
+        parameters:
+          environment: "dev-kube.finance"
+          ingressHost: "onbase-chatbot.dev.ashleyfurniture.com"
+          replicas: 1
+          releaseName: "onbase-chatbot-api-dev"
+          imageRepositoryName: "afi/onbase-chatbot-api-dev"
+          enableTls: true
+          certName: 'onbase-chatbot-tls'
+          appSettingsName: "appsettings.Development.json"
+          aspnetcoreEnvironment: "Development"
+          managedIdentity: $(onbaseChatbotApiManagedIdentityDev)
+          managedIdentityResourceId: $(onbaseChatbotApiManagedIdentityResourceIdDev)

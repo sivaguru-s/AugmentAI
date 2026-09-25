@@ -1,0 +1,52 @@
+parameters:
+  - name: dotnetVersion
+    type: string
+    default: "8.0.x"
+  - name: configFilePath
+    type: string
+    default: "chatbot-onbase-poc/appsettings.Development.json"
+  - name: containerName
+    type: string
+    default: "afi/onbase-chatbot-api-stage"
+
+jobs:
+  - job: BuildOnbaseChatbotApi
+    displayName: "Build Onbase Chatbot API"
+    pool:
+      name: "DevOps"
+      demands:
+        - Agent.OS -equals Linux
+    steps:
+      # Ensure correct .NET SDK is installed
+      - task: UseDotNet@2
+        displayName: "Install .NET SDK ${{ parameters.dotnetVersion }}"
+        inputs:
+         packageType: "sdk"
+         version: "${{ parameters.dotnetVersion }}"
+         performMultiLevelLookup: false
+
+      # Build .NET project
+      - template: build/build-dotnetcore-csproj.yaml@pipeline
+        parameters:
+          dotnetVersion: ${{ parameters.dotnetVersion }}
+          ProjectPath: "chatbot-onbase-poc/"
+          ProjectName: "Chatbot-Onbase.csproj"
+          NugetConfigPresent: true
+          NugetFileName: nuget.config
+          BuildConfiguration: Release
+          TestPresent: false
+          forKubernetes: true
+          KubernetesSourceFolder: $(Build.SourcesDirectory)/kube/onbase-chatbot-api
+          IncludeConfigFiles: true
+          ConfigSourceFolder: $(Build.SourcesDirectory)
+          ConfigFiles: |
+            ${{ parameters.configFilePath }}
+
+      # Build and push Docker image
+      - template: build/build-dockerfile.yaml@pipeline
+        parameters:
+          ContainerTag: $(Build.BuildNumber)
+          IncludeLatestTag: true
+          BuildFromArtifact: true
+          ContainerName: ${{ parameters.containerName }}
+          DockerfilePath: chatbot-onbase-poc/Dockerfile.txt

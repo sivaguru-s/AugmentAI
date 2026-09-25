@@ -1,0 +1,79 @@
+parameters:
+  - name: environment
+    type: string
+    default: "dev-kube.finance"
+
+  - name: ingressHost
+    type: string
+    default: "onbase-chatbot.dev.ashleyfurniture.com"
+
+  - name: replicas
+    type: number
+    default: 1
+
+  - name: releaseName
+    type: string
+    default: "onbase-chatbot-api-dev"
+
+  - name: imageRepositoryName
+    type: string
+    default: "afi/onbase-chatbot-api-dev"
+
+  - name: enableTls
+    type: boolean
+    default: false
+
+  - name: appSettingsName
+    type: string
+    default: "appsettings.Development.json"
+
+  - name: aspnetcoreEnvironment
+    type: string
+    default: "Development"
+
+  - name: managedIdentity
+    type: string
+    default: ""
+
+  - name: managedIdentityResourceId
+    type: string
+    default: ""
+
+  - name: certName
+    type: string
+    default: "onbase-chatbot-tls"
+
+jobs:
+  - deployment: deployOnbaseChatbotApi
+    displayName: "Deploy Onbase Chatbot Api"
+    pool:
+      name: "DevOps"
+      demands:
+        - Agent.OS -equals Linux
+    variables:
+      - name: Environment.ASPNETCORE_ENVIRONMENT
+        value: ${{ parameters.aspnetcoreEnvironment }}
+    environment: ${{ parameters.environment }}
+    strategy:
+      runOnce:
+        deploy:
+          steps:
+            - template: deploy/deploy-kubernetes.yaml@pipeline
+              parameters:
+                HasConfigs: true
+                UseHelm: true
+                ReleaseName: ${{ parameters.releaseName }}
+                HelmOverrideFiles: $(Pipeline.Workspace)/drop/kubernetes/onbase-chatbot-api-helm-values.yaml
+                HelmOverrides: |
+                  image.tag:$(Build.BuildNumber)
+                  replicaCount:${{ parameters.replicas }}
+                  ingress.host:${{ parameters.ingressHost }}
+                  ingress.tls[0].hosts[0]=${{ parameters.ingressHost }}
+                  ingress.certName:${{ parameters.certName }}
+                  image.repository:${{ parameters.imageRepositoryName }}
+                  ingress.enableTls:${{ parameters.enableTls }}
+                  azureIdentity.enabled:True
+                  azureIdentity.clientID:${{ parameters.managedIdentity }}
+                  azureIdentity.managedIdentityResourceId:${{ parameters.managedIdentityResourceId }}
+                  configMaps[0].subPath:${{ parameters.appSettingsName }}
+                  env[0].value:${{ parameters.aspnetcoreEnvironment }}

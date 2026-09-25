@@ -1,0 +1,12 @@
+FROM mcr.microsoft.com/dotnet/aspnet:8.0
+
+ENV ASPNETCORE_URLS="http://*:8080"
+
+ADD /app /app
+
+WORKDIR /app
+
+COPY app/ .
+
+EXPOSE 8080
+ENTRYPOINT ["dotnet", "Chatbot-Onbase.dll"]

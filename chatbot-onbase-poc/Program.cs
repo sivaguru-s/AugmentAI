@@ -59,6 +59,13 @@ builder.Services.AddScoped<IInvoiceQueryParser, InvoiceQueryParser>();
 builder.Services.AddScoped<IInvoiceAnalyticsService, InvoiceAnalyticsService>();
 builder.Services.AddScoped<IChatbotService, ChatbotService>();
 
+// Register Finance Query Services (DB-preferred architecture, OnBase_Chatbot_Business_Flow_v7.md)
+builder.Services.AddScoped<IFinanceQueryRepository, FinanceQueryRepository>();
+builder.Services.AddScoped<IFinanceQueryService, FinanceQueryService>();
+
+// Add health checks (used by Kubernetes startup/liveness/readiness probes)
+builder.Services.AddHealthChecks();
+
 // Add CORS
 builder.Services.AddCors(options =>
 {
@@ -89,6 +96,10 @@ app.UseStaticFiles();
 app.UseCors("AllowAll");
 app.UseAuthorization();
 app.MapControllers();
+
+// Kubernetes probes
+app.MapHealthChecks("/health");
+app.MapHealthChecks("/health/ready");
 
 Log.Information("========================================");
 Log.Information("Application configured successfully");

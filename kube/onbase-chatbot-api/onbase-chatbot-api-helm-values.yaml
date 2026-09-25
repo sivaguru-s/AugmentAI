@@ -1,0 +1,111 @@
+namespace: finance
+
+securityGroupAccess:
+  - securityGroup: Sg_AFI_Role_FIN_Developer_Admin_Unv
+    objectId: e61817c4-8c5a-42f0-9da5-8fda9a6de6f6
+
+azureIdentity:
+  enabled: false
+  clientID: ""
+  clientSecret: ""
+
+# Environment variables for the container
+env:
+  - name: ASPNETCORE_ENVIRONMENT
+    value: "Development"
+
+image:
+  registry: ashleyfurniture.azurecr.io
+  repository: "afi/onbase-chatbot-api-dev"
+  pullPolicy: Always
+  tag: "latest"
+
+replicaCount: 1
+
+autoscaling:
+  enabled: false
+  minReplicas: 1
+
+# Configuration for mounting appsettings from a ConfigMap
+configFiles:
+  enabled: true
+
+configMaps:
+  - name: onbase-chatbot-api-dev
+    mountPath: /app/appsettings.json
+    subPath: appsettings.Development.json
+    readOnly: true
+
+ingress:
+  enabled: true
+  className: nginx
+  annotations:
+    nginx.ingress.kubernetes.io/ssl-redirect: "false"
+    nginx.ingress.kubernetes.io/use-regex: "true"
+    nginx.ingress.kubernetes.io/rewrite-target: /$2
+    nginx.ingress.kubernetes.io/proxy-body-size: "50m"
+
+  host: onbase-chatbot.dev.ashleyfurniture.com
+
+  # Use a specific, regex-based path
+  path: /onbasechatbot/api(/|$)(.*)
+  pathType: ImplementationSpecific
+
+  tls:
+    - secretName: onbase-chatbot-tls
+      hosts:
+        - onbase-chatbot.dev.ashleyfurniture.com
+
+service:
+  type: ClusterIP
+  port: 80
+  targetPort: 8080
+
+httpPort: 8080
+
+# Default resource allocation
+resources:
+  requests:
+    memory: "256Mi"
+    cpu: "100m"
+  limits:
+    memory: "512Mi"
+    cpu: "150m"
+
+# Deployment settings
+deployment:
+  progressDeadlineSeconds: 600  # 10 minutes (default is 600s)
+  startupProbe:
+    enabled: true
+    httpGet:
+      path: /health
+      port: 8080
+    initialDelaySeconds: 10
+    periodSeconds: 10
+    timeoutSeconds: 3
+    failureThreshold: 30  # 30 failures * 10s = 5 minutes max startup time
+  livenessProbe:
+    enabled: true
+    httpGet:
+      path: /health
+      port: 8080
+    initialDelaySeconds: 30
+    periodSeconds: 10
+    timeoutSeconds: 3
+    failureThreshold: 3
+  readinessProbe:
+    enabled: true
+    httpGet:
+      path: /health/ready
+      port: 8080
+    initialDelaySeconds: 15
+    periodSeconds: 5
+    timeoutSeconds: 3
+    failureThreshold: 3
+
+# Service Account configuration (fixes token warnings)
+serviceAccount:
+  create: true
+  automountServiceAccountToken: true
+  annotations: {}
+  name: ""
